@@ -3,8 +3,10 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
+  "author": "Richard Einhorn",
   "scripts": {
-    "dev": "nodemon -r esm index.js --ignore db.json"
+    "dev": "nodemon -r esm index.js",
+    "start": "node -r esm index.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -18,5 +20,8 @@
   },
   "devDependencies": {
     "nodemon": "^2.0.15"
+  },
+  "engines": {
+    "node": "16.x"
   }
 }
