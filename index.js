@@ -58,8 +58,8 @@ async function main() {
   });
 
   // start server
-  app.listen(PORT, () => {
-    console.log(`✅ Spotrack running on http://localhost:${PORT}`);
+  app.listen(process.env.PORT, () => {
+    console.log(`✅ Spotrack running on http://localhost:${process.env.PORT}`);
   });
 }
 
