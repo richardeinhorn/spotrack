@@ -26,6 +26,9 @@ const SongSchema = new mongoose.Schema({
   type: {
     type: String,
   },
+  calendarId: {
+    type: String,
+  },
   dump: {
     type: String,
   }
