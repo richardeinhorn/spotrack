@@ -11,7 +11,6 @@ const SongSchema = new mongoose.Schema({
   },
   uri: {
     type: String,
-    required: true,
   },
   progress_ms: {
     type: Number,
@@ -21,17 +20,24 @@ const SongSchema = new mongoose.Schema({
   },
   href: {
     type: String,
-    required: true,
   },
   type: {
     type: String,
+    required: true,
   },
-  calendarId: {
+  eventId: {
     type: String,
   },
   dump: {
     type: String,
-  }
+    required: true,
+  },
+  startTime: {
+    type: Number,
+  },
+  endTime: {
+    type: Number,
+  },
 });
 
 const Song = mongoose.model("Song", SongSchema);
