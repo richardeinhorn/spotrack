@@ -5,8 +5,8 @@ import cron from "node-cron";
 import { runCron } from "./lib/scraper";
 import mongoose from "mongoose";
 import { getSpotifyApi } from "./lib/spotify";
+import http from "http";
 
-const PORT = 3001;
 const app = express();
 
 mongoose.connect(process.env.DB_URI, {
@@ -30,6 +30,7 @@ async function main() {
 
   // run every 10 seconds
   cron.schedule("*/10 * * * * *", () => {
+    http.get("http://spotrack.herokuapp.com");
     if (!db) console.error("❌ failed to run cron job: no database connection");
     if (!success)
       console.error("❌ failed to run cron job: spotify not authorized");
