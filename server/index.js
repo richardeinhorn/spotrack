@@ -6,6 +6,7 @@ import { runCron } from "./lib/scraper";
 import mongoose from "mongoose";
 import { getSpotifyApi } from "./lib/spotify";
 import http from "http";
+import path from "path";
 
 const app = express();
 
@@ -53,9 +54,14 @@ async function main() {
     res.send("spotrack is running");
   });
 
-  app.get(`/`, async (req, res, next) => {
-    console.log("🏠 called default endpoint");
-    res.send("spotrack is running");
+  // app.get(`/status`, async (req, res, next) => {
+  //   console.log("🏠 called default endpoint");
+  //   res.send("spotrack is running");
+  // });
+
+  app.use(express.static(path.join(__dirname, "..", "build")));
+  app.use((req, res, next) => {
+    res.sendFile(path.join(__dirname, "..", "build", "index.html"));
   });
 
   // start server

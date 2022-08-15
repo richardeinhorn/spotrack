@@ -1,6 +1,6 @@
 <p align="center">
-<img width="300" src="assets/spotrack-logo-wordmark--light.svg#gh-light-mode-only">
-<img width="300" src="assets/spotrack-logo-wordmark--dark.svg#gh-dark-mode-only">
+<img width="300" src="src/assets/spotrack-logo-wordmark--light.svg#gh-light-mode-only">
+<img width="300" src="src/assets/spotrack-logo-wordmark--dark.svg#gh-dark-mode-only">
 </p>
 
 ---

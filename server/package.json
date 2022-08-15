@@ -1,0 +1,27 @@
+{
+  "name": "spotrack",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "author": "Richard Einhorn",
+  "scripts": {
+    "dev": "nodemon -r esm index.js",
+    "start": "node -r esm index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.0",
+    "esm": "^3.2.25",
+    "express": "^4.17.3",
+    "googleapis": "^100.0.0",
+    "mongoose": "^6.2.9",
+    "node-cron": "^3.0.0",
+    "spotify-web-api-node": "^5.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15"
+  },
+  "engines": {
+    "node": "16.x"
+  }
+}
