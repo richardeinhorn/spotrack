@@ -44,6 +44,17 @@ cd ./spotrack
 yarn install [or] npm install
 ```
 
+## Roadmap
+
+- [ ] Support for additional calendars
+- [ ] Improve onboarding flow
+- [ ] Host demo
+
+## FAQs
+
+*Are podcasts supported?*\
+Unfortunately, Spotify does not make podcast information available to integrations. Spotrack will still show periods when you listened to podcasts, however, no detailed information can be shown.
+
 ## Acknowledgments
 
 This porject is inspired by [Spotify Wrapped](https://spotify.com/wrapped) and a similar feature available for [Amie](https://www.amie.so/) users.
