@@ -34,18 +34,23 @@ export async function addSpotifyRefreshTokenToUser(auth) {
   const { access_token, refresh_token } = auth;
 
   // get spotify user
-  spotifyApi.setAccessToken(access_token);
-  const spotifyUser = await spotifyApi.getMe();
+  const tempSpotifyApi = new SpotifyWebApi({
+    redirectUri: process.env.SPOTIFY_REDIRECT_URL,
+    clientId: process.env.SPOTIFY_CLIENT_ID,
+    clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
+  });
+  tempSpotifyApi.setAccessToken(access_token);
+  const spotifyUser = await tempSpotifyApi.getMe();
   const userEmail = spotifyUser.body.email;
 
   // get supabase UUID for spotify user
-  const { data: users, listUserError } = await supabase.auth.api.listUsers()
+  const { data: users, error: listUserError } = await supabase.auth.api.listUsers()
   if (listUserError) throw new Error(listUserError);
   const userUid = users.find(user => user.email === userEmail).id;
   if (!userUid) throw new Error("Could not find user in database");
 
   // add refresh token to supabase user record
-  const { data: user, updateUserError } = await supabase.auth.api.updateUserById(
+  const { data: user, error: updateUserError } = await supabase.auth.api.updateUserById(
     userUid,
     { user_metadata: { refresh_token } }
   )

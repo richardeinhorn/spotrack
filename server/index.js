@@ -12,9 +12,11 @@ import {
 } from "./lib/spotify";
 import http from "http";
 import path from "path";
+import { createNewCalendar } from "./lib/calendar";
+import { supabase } from "./lib/supabase";
 
-const APP_URL = process.env.APP_URL || "http://localhost:3000";
-const API_URL = process.env.API_URL || "http://localhost:8080";
+const APP_URL = process.env.APP_URL || "http://localhost:3000/";
+const API_URL = process.env.API_URL || "http://localhost:8080/";
 
 const app = express();
 
@@ -56,7 +58,7 @@ async function main() {
   ////////////////////////////////////////////////////////
 
   // get status of server
-  app.get(`/status`, async (req, res, next) => {
+  app.get(`/api/status`, async (req, res, next) => {
     console.info("📃 called status endpoint");
     res.send("spotrack is running");
   });
@@ -91,6 +93,42 @@ async function main() {
         console.error(JSON.stringify(error));
         res.status(500).send(error);
       }
+    }
+  });
+
+  // TODO: add support to specify custom calendar
+  // create calendar for user
+  app.get("/api/calendar/create", async function (req, res) {
+    try {
+      // parse authentication headers
+      const accessOverride = req.get("X-Supabase-Auth") || null;
+      if (!accessOverride) {
+        console.error("User not authorized.");
+        res.status(401).send("Unauthorized");
+        return;
+      }
+      const jwt = JSON.parse(
+        Buffer.from(accessOverride.split(".")[1], "base64").toString()
+      );
+      const userUid = jwt.sub;
+      if (!userUid) throw new Error("No user UID found in JWT");
+
+      // assert user is in supabase
+      const { data: users } = await supabase.auth.api.listUsers();
+      if (!users) throw new Error("Could not retrieve users from supdb");
+      const databaseUser = users.find((user) => user.id === userUid);
+      if (!databaseUser)
+        throw new Error(`Could not find user ${userUid} in database`);
+  
+      // check if user has a calendar
+      var calendarId = databaseUser.user_metadata.calendarId;
+      // var calendarId = jwt.user_metadata.calendarId;
+      if (!calendarId) {
+        calendarId = await createNewCalendar(userUid, databaseUser.user_metadata.email);
+      }
+      res.send(calendarId);
+    } catch (error) {
+      res.status(500).send(error);
     }
   });
 

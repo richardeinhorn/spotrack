@@ -1,4 +1,5 @@
 import { google } from "googleapis";
+const { supabase } = require("./supabase");
 
 const calendar = google.calendar("v3");
 
@@ -51,6 +52,53 @@ jwtClient.authorize(function (err, tokens) {
 //     }
 //   );
 // }
+
+// TODO: add time zone support
+export async function createNewCalendar(userUid, userEmail) {
+  // create new calendar
+  const newCalendar = await calendar.calendars.insert({
+    auth: jwtClient,
+    resource: {
+      summary: "Spotrack",
+      description: "Tracks songs you listen to on Spotify",
+    }
+  }).then((res) => {
+    console.log("✅ New calendar added");
+    if (res.data) return res.data;
+  })
+  .catch((error) =>
+    console.error(`❌ Error creating calendar: ${error}`)
+  );
+  console.log('newCalendar', JSON.stringify(newCalendar, null, 2))
+  const calendarId = newCalendar.id
+  if (!calendarId) throw new Error("❌ Error creating new calendar");
+
+  // add calendar ID to supabase user record
+  const { error: updateUserError } = await supabase.auth.api.updateUserById(
+    userUid,
+    { user_metadata: { calendarId } }
+  )
+  if (updateUserError) throw new Error(updateUserError);
+  console.info(`added calendarId ${calendarId.substring(0, 9)}... to user ${userUid}`)
+  
+  // share calendar with user email
+  await calendar.acl.insert({
+    auth: jwtClient,
+    calendarId,
+    resource: {
+      role: "reader",
+      scope: { type: "user", value: userEmail },
+    }
+  }).then((res) => {
+    console.log("✅ Calendar shared with user");
+    if (res.data) return res.data;
+  })
+  .catch((error) =>
+    console.error(`❌ Error sharing calendar with user: ${error}`)
+  );
+
+  return calendarId;
+}
 
 export async function addEvent(newEvent) {
   const calendarId = await calendar.events

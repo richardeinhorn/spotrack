@@ -1,14 +1,19 @@
+import axios from "axios";
 import { useEffect, useState } from "react";
 import "./App.css";
 import { ReactComponent as Logo } from "./assets/spotrack-logo-wordmark--light.svg";
 import { SignupContainer, StepNumber } from "./components";
 import { supabase } from "./lib/supabase";
 
+// const APP_URL = process.env.APP_URL || "http://localhost:3000/";
+const API_URL = process.env.API_URL || "http://localhost:8080/";
+
 const App = () => {
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
   const [error, setError] = useState(null);
   const [step, setStep] = useState(1);
+  const [calendarId, setCalendarId] = useState(null);
   const queryParams = new URLSearchParams(window.location.search);
 
   // fetch complete user record from supabase
@@ -26,12 +31,17 @@ const App = () => {
     setUser(user);
   };
 
-  // check if tracking is active for user
+  // check user signup process (tracking authorised, calendar created)
   useEffect(() => {
     if (!user) return;
     if (user.user_metadata.refresh_token) {
       console.info("User is already tracking songs");
       setStep(3);
+    }
+    if (user.user_metadata.calendarId) {
+      console.info("User has already created calendar");
+      setStep(4);
+      setCalendarId(user.user_metadata.calendarId);
     }
   }, [user]);
 
@@ -83,9 +93,6 @@ const App = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const onAddToCalendar = async () => {
-    setStep(4);
-  };
 
   const onSignIn = async () => {
     const { user, session, error } = await supabase.auth.signIn({
@@ -95,6 +102,29 @@ const App = () => {
     setUser(user);
     setSession(session);
     setStep(2);
+  };
+
+  const onCreateCalendar = async () => {
+    var accessToken = session?.access_token;
+    if (!accessToken) {
+      const session = supabase.auth.session();
+      accessToken = session?.access_token;
+    }
+    console.log(
+      `requesting server resource using access token: ${accessToken}`
+    );
+
+    const res = await axios.get(`${API_URL}api/calendar/create`, {
+      headers: { "X-Supabase-Auth": accessToken },
+    });
+    const calendarId = res?.data;
+    if (!calendarId) {
+      setError("Couldn't create calendar");
+      return console.error("Couldn't create calendar");
+    }
+    console.log(`Created calendar with id: ${calendarId}`);
+    setStep(4);
+    setCalendarId(calendarId);
   };
 
   return (
@@ -119,14 +149,14 @@ const App = () => {
               disabled={step !== 1}
             >
               {step > 1 && user?.user_metadata?.name
-                ? `✅ Hello ${user?.user_metadata?.name}`
+                ? `✅ Hello ${user?.user_metadata?.name}!`
                 : "Sign in with Spotify"}
             </button>
           </div>
           <div id="step-2">
             <StepNumber number={2} />
             <a
-              href="http://localhost:8080/api/spotify/auth"
+              href={`${API_URL}api/spotify/auth`}
               className={`btn ${step <= 2 ? "btn-primary" : "btn-success"} ${
                 step === 2 ? "active" : "disabled"
               }`}
@@ -140,10 +170,10 @@ const App = () => {
               id="signup-btn"
               type="button"
               className={`btn ${step <= 3 ? "btn-primary" : "btn-success"}`}
-              onClick={async () => await onAddToCalendar()}
+              onClick={async () => await onCreateCalendar()}
               disabled={step !== 3}
             >
-              Add to your calendar
+              {step > 3 ? "✅ Calendar created." : "Create your calendar"}
             </button>
           </div>
           <div
@@ -158,7 +188,19 @@ const App = () => {
             role="alert"
             style={{ marginTop: 10, opacity: step === 4 ? 1 : 0 }}
           >
-            🎉 Congratulations. Songs will now be added to your calendar!
+            <div>
+              <p>
+                🎉 Congratulations. Songs will now be added to your calendar!
+              </p>
+              <p>
+                Go to <a href="https://calendar.google.com">Google Calendar</a>{" "}
+                and add the following calendar:
+                <br />
+                {calendarId !== null
+                  ? calendarId
+                  : "error loading calendar URL"}
+              </p>
+            </div>
           </div>
         </SignupContainer>
         <div className="about">
