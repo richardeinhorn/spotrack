@@ -44,11 +44,11 @@ p {
     flex: 1;
 }
 
-#signup-btn {
-    padding: 0.5em 1.5em;
+button {
+    margin: 20px 0px;
 }
 
-.signup p {
+p.info {
     margin: 0.5em;
     opacity: 0.5;
 }

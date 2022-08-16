@@ -12,7 +12,7 @@ let jwtClient = new google.auth.JWT(
   ["https://www.googleapis.com/auth/calendar"]
 );
 
-//authenticate request
+// authenticate request
 jwtClient.authorize(function (err, tokens) {
   if (err) {
     console.log(`❌ Error connecting to calendar: ${err}`);
@@ -22,6 +22,7 @@ jwtClient.authorize(function (err, tokens) {
   }
 });
 
+// // get list of events from Google Calendar to show them in application
 // export async function listEvents() {
 //   calendar.events.list(
 //     {

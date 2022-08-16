@@ -147,7 +147,7 @@ export async function runCron(spotifyApi) {
           };
         },
         function () {
-          throw "❌❌❌ stopping execution";
+          throw new Error("❌❌❌ stopping execution");
         }
       );
     }

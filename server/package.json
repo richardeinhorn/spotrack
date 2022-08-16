@@ -9,6 +9,7 @@
     "start": "node -r esm index.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^1.35.6",
     "cors": "^2.8.5",
     "dotenv": "^16.0.0",
     "esm": "^3.2.25",
