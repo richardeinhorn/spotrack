@@ -14,7 +14,12 @@ import {
   TrackingButton,
 } from "./components/Buttons";
 import { supabase } from "./lib/supabase";
-import { getDarkModeSetting, handleError, validateEmail } from "./lib/utils";
+import {
+  getAccessToken,
+  getDarkModeSetting,
+  handleError,
+  validateEmail,
+} from "./lib/utils";
 
 const App = () => {
   const [isDarkMode] = useState(getDarkModeSetting());
@@ -68,12 +73,12 @@ const App = () => {
   useEffect(() => {
     if (!user) return;
     if (user.user_metadata.refresh_token) {
-      console.info("User is already tracking songs");
+      process.env.NODE_ENV !== "production" && console.info("User is already tracking songs");
       setStep(3);
       setIsAllowingTrackingOnSpotify(false);
     }
     if (user.user_metadata.calendarId) {
-      console.info("User has already created calendar");
+      process.env.NODE_ENV !== "production" && console.info("User has already created calendar");
       setStep(4);
       setCalendarId(user.user_metadata.calendarId);
       setisCreatingCalendarOnServer(false);
@@ -103,7 +108,7 @@ const App = () => {
   // TODO: used best practice from https://github.com/supabase/supabase/blob/master/examples/todo-list/react-todo-list/src/App.js
   supabase.auth.onAuthStateChange((event, session) => {
     if (event === "SIGNED_IN") {
-      console.info("User signed in");
+      process.env.NODE_ENV !== "production" && console.info("User signed in");
       setSession(session);
       setStep(2); // skip login
       getUserFromDatabase(session["access_token"]);
@@ -147,7 +152,7 @@ const App = () => {
     if (error) handleError(error);
 
     // retrieving accessToken for signed in user
-    const accessToken = (session, supabase, setError);
+    const accessToken = getAccessToken(session, supabase, setError);
 
     // request calendar creation and user sharing from server
     const res = await axios.post(
@@ -162,7 +167,8 @@ const App = () => {
       const errorMsg = "Couldn't create calendar";
       return handleError(errorMsg, setError);
     }
-    console.info(`Created calendar with id: ${calendarId}`);
+    process.env.NODE_ENV !== "production" &&
+      console.info(`Created calendar with id: ${calendarId}`);
 
     if (res?.data?.calendarEmail) setCalendarEmail(res?.data?.calendarEmail);
 
@@ -181,7 +187,7 @@ const App = () => {
       if (error) handleError(error);
 
       // retrieving accessToken for signed in user
-      const accessToken = (session, supabase, setError);
+      const accessToken = getAccessToken(session, supabase, setError);
 
       // request new calendar sharing and update user record on server
       const res = await axios.post(
@@ -196,7 +202,8 @@ const App = () => {
         const errorMsg = "Couldn't change email address";
         return handleError(errorMsg, setError);
       }
-      console.info(`Changed email address for calendar: ${calendarId}`);
+      process.env.NODE_ENV !== "production" &&
+        console.info(`Changed email address for calendar: ${calendarId}`);
 
       if (res?.data?.calendarEmail) setCalendarEmail(res?.data?.calendarEmail);
     }
