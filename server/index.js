@@ -21,7 +21,7 @@ import bodyParser from "body-parser";
 import { isAuthorised } from "./lib/middleware";
 
 const APP_URL = process.env.APP_URL || "http://localhost:3000/";
-const API_URL = process.env.API_URL || "http://localhost:8080/";
+const API_URL = process.env.API_URL || `http://localhost:${process.env.PORT}/`;
 
 const app = express();
 
