@@ -186,7 +186,9 @@ async function getCurrentTrackFromUser(
           else console.info("Updated access token for user " + userUid);
         },
         function (err) {
-          return console.error("❌ Cron job failed on 2nd attempt. No data processed." + err);
+          return console.error(
+            "❌ Cron job failed on 2nd attempt. No data processed." + err
+          );
         }
       );
     }
@@ -197,15 +199,18 @@ export async function runCron(spotifyApi) {
   const users = await getUsers(supabase);
 
   // loop through users and process data
-  console.info(`Looping through ${users.length} users.`);
+  if (process.env.NODE_ENV !== "production")
+    console.info(`Looping through ${users.length} users.`);
   var user;
   for (let i = 0; i < users.length; i++) {
     user = users[i];
 
     // user onboarding not completed - missing calendar or spotify authorization
-    if (!user.user_metadata.calendarId || !user.user_metadata.refresh_token)
-      return console.info(`User ${user.id} is not onboarded.`);
-
+    if (!user.user_metadata.calendarId || !user.user_metadata.refresh_token) {
+      if (process.env.NODE_ENV !== "production")
+        console.info(`User ${user.id} is not onboarded.`);
+      return;
+    }
     // TODO: allow parallel processing
     await getCurrentTrackFromUser(
       spotifyApi,

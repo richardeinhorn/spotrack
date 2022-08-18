@@ -27,6 +27,10 @@ Copy the repository:
 git clone [REPOSITORY]
 ```
 
+You will need to set up a Spotify developer account and a Google Cloud Platform account to track songs and interact with the calendar.
+
+In addition, you will need to setup a database to store user data and listening history.
+
 ## Development
 
 If you would like to contribute, please reach out to me or create a pull request for your suggested changes.
@@ -41,14 +45,15 @@ Install dependencies:
 
 ```console
 cd ./spotrack
-yarn install [or] npm install
+yarn install
+yarn dev && cd server/ && yarn dev
 ```
 
 ## Roadmap
 
 - [ ] Support for additional calendars
-- [ ] Improve onboarding flow
-- [ ] Host demo
+- [ ] Add dashboard with listening statistics
+- [ ] Move all data into relational DB
 
 ## FAQs
 
@@ -57,4 +62,4 @@ Unfortunately, Spotify does not make podcast information available to integratio
 
 ## Acknowledgments
 
-This porject is inspired by [Spotify Wrapped](https://spotify.com/wrapped) and a similar feature available for [Amie](https://www.amie.so/) users.
+This project is inspired by [Spotify Wrapped](https://spotify.com/wrapped) and a similar feature available in the [Amie](https://www.amie.so/) calendar.
