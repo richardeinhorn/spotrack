@@ -12,7 +12,7 @@
   },
   "scripts": {
     "dev": "react-scripts start",
-    "start": "cd server/ && yarn start",
+    "start": "cd server/ && yarn install && yarn start",
     "build": "yarn install && react-scripts build"
   },
   "eslintConfig": {
