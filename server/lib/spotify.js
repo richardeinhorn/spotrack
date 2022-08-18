@@ -9,9 +9,6 @@ const spotifyApi = new SpotifyWebApi({
 });
 
 export async function getAuthorizationUrl() {
-  // const state = require('crypto').randomBytes(8, function(err, buffer) {
-  //   return buffer.toString('hex');
-  // })
   const state = "6fd6b97708bd42dfbacb13950a3921d6"
   var scopes = ['user-read-private', 'user-read-email'];
 
@@ -22,12 +19,6 @@ export async function getAuthorizationCode(code) {
   const authResponse = await spotifyApi.authorizationCodeGrant(code);
   if (!authResponse) throw new Error("failed to get auth response");
   return authResponse.body;
-}
-
-export async function getUsers() {
-  const { data: users, error } = await supabase.auth.api.listUsers()
-  if (error) throw new Error(error);
-  return users
 }
 
 export async function addSpotifyRefreshTokenToUser(auth) {
@@ -52,7 +43,7 @@ export async function addSpotifyRefreshTokenToUser(auth) {
   // add refresh token to supabase user record
   const { data: user, error: updateUserError } = await supabase.auth.api.updateUserById(
     userUid,
-    { user_metadata: { refresh_token } }
+    { user_metadata: { refresh_token, access_token } }
   )
   if (updateUserError) throw new Error(updateUserError);
   
@@ -63,12 +54,16 @@ export async function addSpotifyRefreshTokenToUser(auth) {
 
 export async function refreshAccessToken(refresh_token) {
   spotifyApi.setRefreshToken(refresh_token);
-  spotifyApi.refreshAccessToken().then(
+  return spotifyApi.refreshAccessToken().then(
     function (data) {
       console.info("✅ Spotify access token has been refreshed!");
 
+      const newAccessToken = data.body["access_token"]
+
+      // TODO: check whether to set access token here
       // Save the access token so that it's used in future calls
-      spotifyApi.setAccessToken(data.body["access_token"]);
+      spotifyApi.setAccessToken(newAccessToken);
+      return newAccessToken;
     },
     function (err) {
       console.error("❌ Could not refresh Spotify access token", err);
@@ -76,8 +71,7 @@ export async function refreshAccessToken(refresh_token) {
   );
 }
 
-// Create the authorization URL
-export async function getSpotifyApi(refresh_token = process.env.SPOTIFY_REFRESH_TOKEN) {
-    await refreshAccessToken(refresh_token);
+// Create Spotify API
+export async function getSpotifyApi() {
     return [true, spotifyApi];
 }

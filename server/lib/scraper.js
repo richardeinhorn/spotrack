@@ -1,7 +1,9 @@
 import { addEvent, getEvent, updateLastEvent } from "./calendar";
 import { saveSongToDb, getLastSong } from "./db";
 import { refreshAccessToken } from "./spotify";
+import { supabase } from "./supabase";
 
+// TODO: add timezone support
 function parseTrackEvent(songData) {
   const startTime = songData.timestamp - songData.progress_ms;
   return {
@@ -42,30 +44,57 @@ function parseEpisodeEvent(songData) {
   };
 }
 
-async function addNewPodcastEvent(data, songData) {
+async function addNewPodcastEvent(calendarId, userUid, data, songData) {
   const newEvent = parseEpisodeEvent(songData);
-  const eventId = await addEvent(newEvent);
+  const eventId = await addEvent(calendarId, newEvent);
   const dbEntry = {
     datetime: songData.timestamp,
     name: "Podcast",
     type: songData.currently_playing_type,
     eventId,
     dump: JSON.stringify(data),
+    userUid,
+    calendarId,
   };
   await saveSongToDb(dbEntry);
 }
 
-async function processData(data) {
+async function addNewSongEvent(calendarId, userUid, data, songData) {
+  const newEvent = parseTrackEvent(songData);
+  const eventId = await addEvent(calendarId, newEvent);
+  const dbEntry = {
+    datetime: songData.timestamp,
+    name: songData.item.name,
+    uri: songData.item.uri,
+    progress_ms: songData.progress_ms,
+    duration_ms: songData.item.duration_ms,
+    href: songData.item.href,
+    type: songData.currently_playing_type,
+    eventId,
+    startTime: songData.timestamp - songData.progress_ms,
+    endTime:
+      songData.timestamp - songData.progress_ms + songData.item.duration_ms,
+    dump: JSON.stringify(data),
+    userUid,
+    calendarId,
+  };
+  await saveSongToDb(dbEntry);
+}
+
+async function processData(calendarId, userUid, data) {
+  // do not process if not playing
+  if (!data.body || !data.body.is_playing) return;
+
   // get last song from DB
-  const lastSong = await getLastSong();
+  const lastSong = await getLastSong(userUid);
   const songData = data.body;
   if (songData.currently_playing_type === "track") {
     if (lastSong && lastSong.uri === songData.item.uri) {
-      // console.log(`🎵 song already saved: ${songData.item.name}`);
+      // console.log(`🎵 song for user ${userUid} already saved: ${songData.item.name}`);
     } else {
       // if skipped last song (with 3s threshhold)
-      if (lastSong.endTime > new Date().getTime() - 3000) {
-        await updateLastEvent(lastSong.eventId, {
+      if (lastSong && lastSong.endTime > new Date().getTime() - 3000) {
+        await updateLastEvent(calendarId, lastSong.eventId, {
           end: {
             dateTime: `${new Date(songData.timestamp - songData.progress_ms)
               .toISOString()
@@ -74,37 +103,20 @@ async function processData(data) {
           },
         });
       }
-
-      const newEvent = parseTrackEvent(songData);
-      const eventId = await addEvent(newEvent);
-      const dbEntry = {
-        datetime: songData.timestamp,
-        name: songData.item.name,
-        uri: songData.item.uri,
-        progress_ms: songData.progress_ms,
-        duration_ms: songData.item.duration_ms,
-        href: songData.item.href,
-        type: songData.currently_playing_type,
-        eventId,
-        startTime: songData.timestamp - songData.progress_ms,
-        endTime:
-          songData.timestamp - songData.progress_ms + songData.item.duration_ms,
-        dump: JSON.stringify(data),
-      };
-      await saveSongToDb(dbEntry);
+      await addNewSongEvent(calendarId, userUid, data, songData);
     }
   } else if (songData.currently_playing_type === "episode") {
     // if continue to listen
     if (lastSong && lastSong.type === "episode") {
-      const lastEvent = await getEvent(lastSong.eventId);
+      const lastEvent = await getEvent(calendarId, lastSong.eventId);
 
       // if last podcast ping is more than 30s ago
       if (lastEvent.end.dateTime + 30000 < new Date().getTime()) {
         // add new podcast event
-        addNewPodcastEvent(data, songData);
+        addNewPodcastEvent(calendarId, userUid, data, songData);
       } else {
         // else update existing podcast episode to end now
-        await updateLastEvent(lastSong.eventId, {
+        await updateLastEvent(calendarId, lastSong.eventId, {
           end: {
             dateTime: `${new Date().toISOString().substring(0, 19)}+00:00`,
             timeZone: "Europe/London",
@@ -115,41 +127,92 @@ async function processData(data) {
     } else if (lastSong && lastSong.type !== "episode") {
       // if skipped last song to a podcast episode (with 3s threshhold)
       if (lastSong.endTime > new Date().getTime() - 3000) {
-        await updateLastEvent(lastSong.eventId, {
+        await updateLastEvent(calendarId, lastSong.eventId, {
           end: {
             dateTime: `${new Date().toISOString().substring(0, 19)}+00:00`,
             timeZone: "Europe/London",
           },
         });
       }
-
-      addNewPodcastEvent(data, songData);
+      addNewPodcastEvent(calendarId, userUid, data, songData);
     }
   }
 }
 
-export async function runCron(spotifyApi) {
-  // fetch spotify
+async function getUsers(supabase) {
+  // get all users from supabase db
+  const { data: users, error } = await supabase.auth.api.listUsers();
+  if (error) throw new Error(error);
+  return users;
+}
+
+async function getCurrentTrackFromUser(
+  spotifyApi,
+  calendarId,
+  userUid,
+  refreshToken,
+  accessToken
+) {
+  // set access token for current user
+  spotifyApi.setAccessToken(accessToken);
+
+  // fetch current track
   spotifyApi.getMyCurrentPlayingTrack().then(
-    async function (data) {
-      if (data.body && data.body.is_playing) {
-        processData(data)
-      };
+    function (data) {
+      // on success, process data
+      processData(calendarId, userUid, data);
     },
     async function (err) {
-      console.error("❌ Cron job failed", err);
-      await refreshAccessToken();
+      // on error, try to refresh token
+      console.error("❌ Cron job failed on 1st attempt. " + err);
+      const newAccessToken = await refreshAccessToken(refreshToken);
+      spotifyApi.setAccessToken(newAccessToken);
+
+      // then request current playing track again
       spotifyApi.getMyCurrentPlayingTrack().then(
         async function (data) {
-          // if is playing
-          if (data.body && data.body.is_playing) {
-            processData(data)
-          };
+          // on success, process data
+          processData(calendarId, userUid, data);
+
+          // update user record with new access token
+          const { error: updateUserError } =
+            await supabase.auth.api.updateUserById(userUid, {
+              user_metadata: { access_token: newAccessToken },
+            });
+          if (updateUserError)
+            console.error(
+              "Error saving new access token to User record." + updateUserError
+            );
+          else console.info("Updated access token for user " + userUid);
         },
-        function () {
-          throw new Error("❌❌❌ stopping execution");
+        function (err) {
+          return console.error("❌ Cron job failed on 2nd attempt. No data processed." + err);
         }
       );
     }
   );
+}
+
+export async function runCron(spotifyApi) {
+  const users = await getUsers(supabase);
+
+  // loop through users and process data
+  console.info(`Looping through ${users.length} users.`);
+  var user;
+  for (let i = 0; i < users.length; i++) {
+    user = users[i];
+
+    // user onboarding not completed - missing calendar or spotify authorization
+    if (!user.user_metadata.calendarId || !user.user_metadata.refresh_token)
+      return console.info(`User ${user.id} is not onboarded.`);
+
+    // TODO: allow parallel processing
+    await getCurrentTrackFromUser(
+      spotifyApi,
+      user.user_metadata.calendarId,
+      user.id,
+      user.user_metadata.refresh_token,
+      user.user_metadata.access_token
+    );
+  }
 }

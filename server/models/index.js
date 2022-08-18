@@ -38,6 +38,14 @@ const SongSchema = new mongoose.Schema({
   endTime: {
     type: Number,
   },
+  userUid: {
+    type: String,
+    required: true,
+  },
+  calendarId: {
+    type: String,
+    required: true,
+  }
 });
 
 const Song = mongoose.model("Song", SongSchema);

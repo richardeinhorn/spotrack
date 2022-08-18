@@ -11,7 +11,7 @@ export async function saveSongToDb(dbEntry) {
   }
 }
 
-export async function getLastSong() {
-  const lastSongs = await SongModel.find().sort({ datetime: -1 }).limit(1);
+export async function getLastSong(userUid) {
+  const lastSongs = await SongModel.find({ userUid }).sort({ datetime: -1 }).limit(1);
   return lastSongs[0];
 }

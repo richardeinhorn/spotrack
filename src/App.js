@@ -73,12 +73,14 @@ const App = () => {
   useEffect(() => {
     if (!user) return;
     if (user.user_metadata.refresh_token) {
-      process.env.NODE_ENV !== "production" && console.info("User is already tracking songs");
+      process.env.NODE_ENV !== "production" &&
+        console.info("User is already tracking songs");
       setStep(3);
       setIsAllowingTrackingOnSpotify(false);
     }
     if (user.user_metadata.calendarId) {
-      process.env.NODE_ENV !== "production" && console.info("User has already created calendar");
+      process.env.NODE_ENV !== "production" &&
+        console.info("User has already created calendar");
       setStep(4);
       setCalendarId(user.user_metadata.calendarId);
       setisCreatingCalendarOnServer(false);
@@ -131,51 +133,71 @@ const App = () => {
       setStep(3);
       window.history.replaceState({}, "", "/");
     }
+    const session = supabase.auth.session();
+    if (session) {
+      setSession(session);
+      setUser(session?.user)
+      setCalendarEmail(session?.user?.user_metadata?.email);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const onSignIn = async () => {
     setIsLoggingInOnSpotify(true);
-    const { user, session, error } = await supabase.auth.signIn({
-      provider: "spotify",
-    });
+    setError(null);
+    const { user, session, error } = await supabase.auth.signIn(
+      {
+        provider: "spotify",
+      },
+      {
+        scopes: "user-read-private user-read-email user-read-currently-playing",
+      }
+    );
     if (error) return handleError(error, setError);
     setUser(user);
+    console.log('user', JSON.stringify(user, null, 2))
+    setCalendarEmail(user.user_metadata.email);
     setSession(session);
   };
 
   const onCreateCalendar = async () => {
+    setError(null);
     setisCreatingCalendarOnServer(true);
 
-    // check that email address is valid
-    const { error } = validateEmail(newEmail);
-    if (error) handleError(error);
+    try {
+      // check that email address is valid
+      const { error } = validateEmail(calendarEmail);
+      if (error) handleError(error);
 
-    // retrieving accessToken for signed in user
-    const accessToken = getAccessToken(session, supabase, setError);
+      // retrieving accessToken for signed in user
+      const accessToken = getAccessToken(session, supabase, setError);
 
-    // request calendar creation and user sharing from server
-    const res = await axios.post(
-      `${process.env.REACT_APP_API_URL}api/calendar/create`,
-      { calendarEmail },
-      {
-        headers: { "X-Supabase-Auth": accessToken },
+      // request calendar creation and user sharing from server
+      const res = await axios.post(
+        `${process.env.REACT_APP_API_URL}api/calendar/create`,
+        { calendarEmail },
+        {
+          headers: { "X-Supabase-Auth": accessToken },
+        }
+      );
+      const calendarId = res?.data?.calendarId;
+      if (!calendarId) {
+        const errorMsg = "Couldn't create calendar";
+        return handleError(errorMsg, setError);
       }
-    );
-    const calendarId = res?.data?.calendarId;
-    if (!calendarId) {
-      const errorMsg = "Couldn't create calendar";
-      return handleError(errorMsg, setError);
+      process.env.NODE_ENV !== "production" &&
+        console.info(`Created calendar with id: ${calendarId}`);
+
+      if (res?.data?.calendarEmail) setCalendarEmail(res?.data?.calendarEmail);
+
+      // complete signup process
+      setStep(4);
+      setCalendarId(calendarId);
+    } catch (error) {
+      handleError(error, setError);
+    } finally {
+      setisCreatingCalendarOnServer(false);
     }
-    process.env.NODE_ENV !== "production" &&
-      console.info(`Created calendar with id: ${calendarId}`);
-
-    if (res?.data?.calendarEmail) setCalendarEmail(res?.data?.calendarEmail);
-
-    // complete signup process
-    setStep(4);
-    setCalendarId(calendarId);
-    setisCreatingCalendarOnServer(false);
   };
 
   const onChangeCalendarEmail = async () => {
@@ -284,6 +306,8 @@ const App = () => {
                 <a
                   style={{ color: "inherit" }}
                   href="https://calendar.google.com/calendar/r/settings/addcalendar?pli=1"
+                  target="_blank"
+                  rel="noreferrer"
                 >
                   Google Calendar
                 </a>{" "}

@@ -101,7 +101,6 @@ export async function createNewCalendar(userUid, calendarEmail) {
       if (res.data) return res.data;
     })
     .catch((error) => console.error(`❌ Error creating calendar: ${error}`));
-  console.log("newCalendar", JSON.stringify(newCalendar, null, 2));
   const calendarId = newCalendar.id;
   if (!calendarId) throw new Error("❌ Error creating new calendar");
 
@@ -114,11 +113,11 @@ export async function createNewCalendar(userUid, calendarEmail) {
   return calendarId;
 }
 
-export async function addEvent(newEvent) {
-  const calendarId = await calendar.events
+export async function addEvent(calendarId, newEvent) {
+  const id = await calendar.events
     .insert({
       auth: jwtClient,
-      calendarId: process.env.CALENDAR_ID,
+      calendarId,
       resource: newEvent,
     })
     .then((res) => {
@@ -128,32 +127,32 @@ export async function addEvent(newEvent) {
     .catch((error) =>
       console.error(`❌ Error adding song to calendar: ${error}`)
     );
-  return calendarId;
+  return id;
 }
 
-export async function updateLastEvent(oldEventId, updatedEventInfo) {
-  const calendarId = await calendar.events
+export async function updateLastEvent(calendarId, oldEventId, updatedEventInfo) {
+  const id = await calendar.events
     .patch({
       auth: jwtClient,
-      calendarId: process.env.CALENDAR_ID,
+      calendarId,
       eventId: oldEventId,
       requestBody: updatedEventInfo,
     })
     .then((res) => {
-      console.log("✅ Previous song updated");
+      // console.log("✅ Previous song updated");
       if (res.data) return res.data.id;
     })
     .catch((error) =>
       console.error(`❌ Error updating previous song ${oldEventId}: ${error}`)
     );
-  return calendarId;
+  return id;
 }
 
-export async function getEvent(eventId) {
-  const calendarId = await calendar.events
+export async function getEvent(calendarId, eventId) {
+  const id = await calendar.events
     .get({
       auth: jwtClient,
-      calendarId: process.env.CALENDAR_ID,
+      calendarId,
       eventId,
     })
     .then((res) => {
@@ -162,5 +161,5 @@ export async function getEvent(eventId) {
     .catch((error) =>
       console.error(`❌ Error fetching event ${eventId}: ${error}`)
     );
-  return calendarId;
+  return id;
 }
