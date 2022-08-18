@@ -173,8 +173,7 @@ const App = () => {
       const accessToken = getAccessToken(session, supabase, setError);
 
       // request calendar creation and user sharing from server
-      const res = await axios.post(
-        `${process.env.REACT_APP_API_URL}api/calendar/create`,
+      const res = await axios.post("/api/calendar/create",
         { calendarEmail },
         {
           headers: { "X-Supabase-Auth": accessToken },
@@ -212,8 +211,7 @@ const App = () => {
       const accessToken = getAccessToken(session, supabase, setError);
 
       // request new calendar sharing and update user record on server
-      const res = await axios.post(
-        `${process.env.REACT_APP_API_URL}api/calendar/update`,
+      const res = await axios.post("/api/calendar/update",
         { calendarEmail: newEmail },
         {
           headers: { "X-Supabase-Auth": accessToken },
