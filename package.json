@@ -12,8 +12,8 @@
   },
   "scripts": {
     "dev": "react-scripts start",
-    "start": "yarn run build && (cd server && yarn start)",
-    "build": "react-scripts build"
+    "start": "cd server/ && yarn start",
+    "build": "yarn install && react-scripts build"
   },
   "eslintConfig": {
     "extends": [
