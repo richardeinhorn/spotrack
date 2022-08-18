@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const SongSchema = new mongoose.Schema({
   datetime: {
@@ -45,9 +45,7 @@ const SongSchema = new mongoose.Schema({
   calendarId: {
     type: String,
     required: true,
-  }
+  },
 });
 
-const Song = mongoose.model("Song", SongSchema);
-
-module.exports = Song;
+export const SongModel = mongoose.model("Song", SongSchema);

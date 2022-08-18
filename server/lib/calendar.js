@@ -1,5 +1,5 @@
 import { google } from "googleapis";
-const { supabase } = require("./supabase");
+import { supabase } from  "./supabase";
 
 const calendar = google.calendar("v3");
 

@@ -1,5 +1,5 @@
-const SpotifyWebApi = require("spotify-web-api-node");
-const { supabase } = require("./supabase");
+import SpotifyWebApi from "spotify-web-api-node";
+import { supabase } from "./supabase";
 
 // Setting credentials can be done in the wrapper's constructor, or using the API object's setters.
 const spotifyApi = new SpotifyWebApi({

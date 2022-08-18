@@ -4,6 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "author": "Richard Einhorn",
+  "type": "commonjs",
   "scripts": {
     "dev": "nodemon -r esm index.js",
     "start": "node -r esm index.js"

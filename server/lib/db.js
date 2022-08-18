@@ -1,4 +1,4 @@
-const SongModel = require("../models");
+import { SongModel } from "../models";
 
 export async function saveSongToDb(dbEntry) {
   const song = new SongModel(dbEntry);
@@ -12,6 +12,8 @@ export async function saveSongToDb(dbEntry) {
 }
 
 export async function getLastSong(userUid) {
-  const lastSongs = await SongModel.find({ userUid }).sort({ datetime: -1 }).limit(1);
+  const lastSongs = await SongModel.find({ userUid })
+    .sort({ datetime: -1 })
+    .limit(1);
   return lastSongs[0];
 }
