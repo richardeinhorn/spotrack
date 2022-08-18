@@ -10,7 +10,6 @@ import {
   getAuthorizationUrl,
   getSpotifyApi,
 } from "./lib/spotify";
-import http from "http";
 import path from "path";
 import {
   createNewCalendar,
@@ -19,9 +18,7 @@ import {
 } from "./lib/calendar";
 import bodyParser from "body-parser";
 import { isAuthorised } from "./lib/middleware";
-
-const APP_URL = process.env.APP_URL || "http://localhost:3000/";
-const API_URL = process.env.API_URL || `http://localhost:${process.env.PORT}/`;
+import { keepDynoAlive } from "./lib/utils";
 
 const app = express();
 
@@ -36,7 +33,7 @@ async function main() {
   app.use(bodyParser.json()); // parse application/json
 
   // initialize spotify API client
-  const [success, spotifyApi] = await getSpotifyApi();
+  const [isSpotifyAuthorised, spotifyApi] = await getSpotifyApi();
 
   // connect to mongoDB
   const db = mongoose.connection;
@@ -50,9 +47,11 @@ async function main() {
 
   // schedule cron job: run scraper every 10 seconds
   cron.schedule("*/10 * * * * *", async () => {
-    http.get(API_URL.replace("https", "http")); // keep dyno alive; can only call http
+    keepDynoAlive() // keep free tier dyno alive
+
+    // run cron job
     if (!db) console.error("❌ failed to run cron job: no database connection");
-    if (!success)
+    if (!isSpotifyAuthorised)
       console.error("❌ failed to run cron job: spotify not authorized");
     else {
       console.info(`⏲️ running cron job at ${new Date()}`);
@@ -87,7 +86,7 @@ async function main() {
 
     // TODO: check state match
     if (state === null) {
-      res.redirect(`${APP_URL}?error=state-mismatch`);
+      res.redirect(`${process.env.APP_URL}?error=state-mismatch`);
     } else {
       try {
         // get authorization code
@@ -95,7 +94,7 @@ async function main() {
         console.info("received authorization code");
         await addSpotifyRefreshTokenToUser(auth);
 
-        res.redirect(`${APP_URL}?callbackStep=2`);
+        res.redirect(`${process.env.APP_URL}?callbackStep=2`);
       } catch (error) {
         console.error(JSON.stringify(error));
         res.status(500).send(error);
@@ -105,8 +104,8 @@ async function main() {
 
   // create calendar for user
   app.post("/api/calendar/create", isAuthorised, async function (req, res) {
-    const databaseUser = res.locals.user
-    const userUid = databaseUser.id
+    const databaseUser = res.locals.user;
+    const userUid = databaseUser.id;
     const calendarEmail = req.body.calendarEmail;
 
     console.info(`📅 creating calendar for user ${userUid}`);
@@ -124,10 +123,10 @@ async function main() {
 
   // create calendar for user
   app.post("/api/calendar/update", isAuthorised, async function (req, res) {
-    const databaseUser = res.locals.user
-    const userUid = databaseUser.id
+    const databaseUser = res.locals.user;
+    const userUid = databaseUser.id;
     const calendarEmail = req.body.calendarEmail;
-    
+
     if (!calendarEmail) {
       console.error("No email provided.");
       return res.status(400).send("Missing calendarEmail in request body");
@@ -163,11 +162,7 @@ async function main() {
 
   // start server
   app.listen(process.env.PORT, () => {
-    console.log(
-      `✅ Spotrack running on ${
-        process.env.API_URL || `http://localhost:${process.env.PORT}`
-      }`
-    );
+    console.log(`✅ Server running on http://localhost:${process.env.PORT}`);
   });
 }
 
