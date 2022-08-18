@@ -1,11 +1,7 @@
-import React from 'react'
+import React from "react";
 
-const StepNumber = ({number}) => {
-  return (
-    <div>
-        <p style={{fontSize: "1.5rem"}}>{number}</p>
-    </div>
-  )
-}
+const StepNumber = ({ number }) => {
+  return <p className="step-number">{number}</p>;
+};
 
-export default StepNumber
+export default StepNumber;

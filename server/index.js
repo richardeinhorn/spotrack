@@ -12,8 +12,9 @@ import {
 } from "./lib/spotify";
 import http from "http";
 import path from "path";
-import { createNewCalendar } from "./lib/calendar";
+import { createNewCalendar, shareCalendarWithUser, updateUserCalendarData } from "./lib/calendar";
 import { supabase } from "./lib/supabase";
+import bodyParser from "body-parser";
 
 const APP_URL = process.env.APP_URL || "http://localhost:3000/";
 const API_URL = process.env.API_URL || "http://localhost:8080/";
@@ -27,6 +28,8 @@ mongoose.connect(process.env.DB_URI, {
 
 async function main() {
   app.use(cors());
+  // app.use(bodyParser.urlencoded({ extended: false })) // parse application/x-www-form-urlencoded
+  app.use(bodyParser.json()); // parse application/json
 
   // initialize spotify API client
   const [success, spotifyApi] = await getSpotifyApi();
@@ -96,37 +99,85 @@ async function main() {
     }
   });
 
-  // TODO: add support to specify custom calendar
-  // create calendar for user
-  app.get("/api/calendar/create", async function (req, res) {
-    try {
-      // parse authentication headers
-      const accessOverride = req.get("X-Supabase-Auth") || null;
-      if (!accessOverride) {
-        console.error("User not authorized.");
-        res.status(401).send("Unauthorized");
-        return;
-      }
-      const jwt = JSON.parse(
-        Buffer.from(accessOverride.split(".")[1], "base64").toString()
-      );
-      const userUid = jwt.sub;
-      if (!userUid) throw new Error("No user UID found in JWT");
+  const parseCalendarRequest = async (req, res) => {
+    // parse request params
+    const accessOverride = req.get("X-Supabase-Auth") || null;
+    const calendarEmail = req.body.calendarEmail;
 
-      // assert user is in supabase
-      const { data: users } = await supabase.auth.api.listUsers();
-      if (!users) throw new Error("Could not retrieve users from supdb");
-      const databaseUser = users.find((user) => user.id === userUid);
-      if (!databaseUser)
-        throw new Error(`Could not find user ${userUid} in database`);
-  
+    // check JWT
+    if (!accessOverride) {
+      console.error("User not authorized.");
+      return res.status(401).send("Unauthorized");
+    }
+    if (!calendarEmail) {
+      console.error("No email provided.");
+      return res.status(400).send("Missing calendarEmail in request body");
+    }
+
+    // parse authentication headers
+    const jwt = JSON.parse(
+      Buffer.from(accessOverride.split(".")[1], "base64").toString()
+    );
+    const userUid = jwt.sub;
+    if (!userUid) {
+      console.error("No user UID found in JWT");
+      return res.status(400).send("Missing user UID");
+    }
+
+    // assert user is in supabase
+    const { data: users } = await supabase.auth.api.listUsers();
+    if (!users) {
+      console.error("Could not retrieve users from supdb");
+      return res.status(500).send("Error");
+    }
+    const databaseUser = users.find((user) => user.id === userUid);
+    if (!databaseUser) {
+      console.error(`Could not find user ${userUid} in database`);
+      return res.status(500).send("Unknown user");
+    }
+
+    return { calendarEmail, userUid, databaseUser };
+  };
+
+  // create calendar for user
+  app.post("/api/calendar/create", async function (req, res) {
+    try {
+      const { calendarEmail, userUid, databaseUser } =
+        await parseCalendarRequest(req, res);
+
+      console.info(`📅 creating calendar for user ${userUid}`);
       // check if user has a calendar
       var calendarId = databaseUser.user_metadata.calendarId;
-      // var calendarId = jwt.user_metadata.calendarId;
       if (!calendarId) {
-        calendarId = await createNewCalendar(userUid, databaseUser.user_metadata.email);
+        calendarId = await createNewCalendar(userUid, calendarEmail);
       }
-      res.send(calendarId);
+      res.send({calendarId, calendarEmail});
+    } catch (error) {
+      res.status(500).send(error);
+    }
+  });
+
+  // create calendar for user
+  app.post("/api/calendar/update", async function (req, res) {
+    try {
+      const { calendarEmail, userUid, databaseUser } =
+        await parseCalendarRequest(req, res);
+
+      console.info(`📅 changing email for user ${userUid}`);
+      // confirm that user has a calendar
+      var calendarId = databaseUser.user_metadata.calendarId;
+      if (!calendarId) {
+        console.error(`Could not find user ${userUid} in database`);
+        return res.status(500).send("Unknown user");
+      }
+
+      // share calendar with new email
+      await shareCalendarWithUser(calendarId, calendarEmail);
+
+      // update user record with calendar ID and calendar email
+      await updateUserCalendarData(userUid, calendarId, calendarEmail);
+
+      res.send({calendarId, calendarEmail});
     } catch (error) {
       res.status(500).send(error);
     }
