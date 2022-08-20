@@ -13,6 +13,8 @@
 - [x] Capture listening from all your devices
 - [x] Secure [OAuth 2.0](https://oauth.net/2/) authentication to connect to your Spotify account
 
+![Screenshot of Spotrack Sign-Up Process](/assets/SpotrackSuccess.png "Simple Sign-Up")
+
 ## Setup
 
 Start tracking in minutes - sign up for Spotrack here:
@@ -51,6 +53,7 @@ yarn dev && cd server/ && yarn dev
 
 ## Roadmap
 
+- [ ] Monitoring and automated testing
 - [ ] Support for additional calendars
 - [ ] Add dashboard with listening statistics
 - [ ] Move all data into relational DB
