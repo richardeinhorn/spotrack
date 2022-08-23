@@ -7,21 +7,21 @@ import {
   StepNumber,
   AboutSection,
   CalendarEmailForm,
-} from "./components";
+} from "../components";
 import {
   CalendarButton,
   LoginButton,
   TrackingButton,
-} from "./components/Buttons";
-import { supabase } from "./lib/supabase";
+} from "../components/Buttons";
+import { supabase } from "../lib/supabase";
 import {
   getAccessToken,
   getDarkModeSetting,
   handleError,
   validateEmail,
-} from "./lib/utils";
+} from "../lib/utils";
 
-const App = () => {
+const OnboardingPage = () => {
   const [isDarkMode] = useState(getDarkModeSetting());
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
@@ -378,4 +378,4 @@ const App = () => {
   );
 };
 
-export default App;
+export default OnboardingPage;

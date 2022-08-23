@@ -55,7 +55,6 @@ async function main() {
     if (!isSpotifyAuthorised)
       console.error("❌ failed to run cron job: spotify not authorized");
     else {
-      console.info(`⏲️ running cron job at ${new Date()}`);
       await runCron(spotifyApi);
     }
   });

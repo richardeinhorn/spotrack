@@ -3,9 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@chakra-ui/icons": "^2.0.8",
+    "@chakra-ui/react": "^2.2.8",
+    "@emotion/react": "^11",
+    "@emotion/styled": "^11",
     "@supabase/supabase-js": "^1.35.6",
     "axios": "^0.27.2",
     "dotenv": "^16.0.1",
+    "framer-motion": "^6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1"

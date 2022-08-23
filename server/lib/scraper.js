@@ -111,7 +111,10 @@ async function processData(calendarId, userUid, data) {
       const lastEvent = await getEvent(calendarId, lastSong.eventId);
 
       // if last podcast ping is more than 30s ago
-      if (lastEvent.end.dateTime + 30000 < new Date().getTime()) {
+      if (
+        new Date(lastEvent.end.dateTime).getTime() + 30000 <
+        new Date().getTime()
+      ) {
         // add new podcast event
         addNewPodcastEvent(calendarId, userUid, data, songData);
       } else {
@@ -134,15 +137,18 @@ async function processData(calendarId, userUid, data) {
           },
         });
       }
+      // else if started to listen to podcast after silence
       addNewPodcastEvent(calendarId, userUid, data, songData);
     }
   }
 }
 
+// get all users from supabase db
 async function getUsers(supabase) {
-  // get all users from supabase db
   const { data: users, error } = await supabase.auth.api.listUsers();
   if (error) throw new Error(error);
+
+  console.info("Retrieved users from database.");
   return users;
 }
 
@@ -201,8 +207,7 @@ export async function runCron(spotifyApi) {
   const users = await getUsers(supabase);
 
   // loop through users and process data
-  if (process.env.NODE_ENV !== "production")
-    console.info(`Looping through ${users.length} users.`);
+  console.info(`⏲️ running cron job - looping through ${users.length} users.`);
   var user;
   for (let i = 0; i < users.length; i++) {
     user = users[i];
