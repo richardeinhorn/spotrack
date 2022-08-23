@@ -165,7 +165,9 @@ async function getCurrentTrackFromUser(
     async function (err) {
       // on error, try to refresh token
       console.error("❌ Cron job failed on 1st attempt. " + err);
-      const newAccessToken = await refreshAccessToken(refreshToken);
+      const newAccessToken = await refreshAccessToken(refreshToken, userUid);
+      if (!newAccessToken) return;
+
       spotifyApi.setAccessToken(newAccessToken);
 
       // then request current playing track again

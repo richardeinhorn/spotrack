@@ -22,6 +22,7 @@ import { keepDynoAlive } from "./lib/utils";
 
 const app = express();
 
+// connect to MongoDB instance
 mongoose.connect(process.env.DB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -79,7 +80,7 @@ async function main() {
     res.redirect(authorizeUrl);
   });
 
-  // handling callback from spotify authorization
+  // GET - handling callback from spotify authorization
   app.get("/callback", async function (req, res) {
     var code = req.query.code || null;
     var state = req.query.state || null;
@@ -102,7 +103,7 @@ async function main() {
     }
   });
 
-  // create calendar for user
+  // POST [auth] - create calendar for user
   app.post("/api/calendar/create", isAuthorised, async function (req, res) {
     const databaseUser = res.locals.user;
     const userUid = databaseUser.id;
@@ -121,7 +122,7 @@ async function main() {
     }
   });
 
-  // create calendar for user
+  // POST [auth] - update calendar for user
   app.post("/api/calendar/update", isAuthorised, async function (req, res) {
     const databaseUser = res.locals.user;
     const userUid = databaseUser.id;
@@ -155,7 +156,7 @@ async function main() {
 
   // serve frontend application
   app.use(express.static(path.join(__dirname, "..", "build")));
-  app.use((req, res, next) => {
+  app.use((req, res) => {
     res.sendFile(path.join(__dirname, "..", "build", "index.html"));
   });
   console.log(`✅ Serving frontend application from build`);

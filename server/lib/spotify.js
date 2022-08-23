@@ -52,21 +52,18 @@ export async function addSpotifyRefreshTokenToUser(auth) {
   return user;
 }
 
-export async function refreshAccessToken(refresh_token) {
+export async function refreshAccessToken(refresh_token, userUid) {
   spotifyApi.setRefreshToken(refresh_token);
   return spotifyApi.refreshAccessToken().then(
     function (data) {
-      console.info("✅ Spotify access token has been refreshed!");
-
       const newAccessToken = data.body["access_token"]
-
-      // TODO: check whether to set access token here
-      // Save the access token so that it's used in future calls
-      spotifyApi.setAccessToken(newAccessToken);
+      if (!newAccessToken) throw new Error(`No access token returned from Spotify for user ${userUid}`);
+      
+      console.info(`✅ Spotify access token refreshed for user: ${userUid}.`);
       return newAccessToken;
     },
     function (err) {
-      console.error("❌ Could not refresh Spotify access token", err);
+      console.error(`❌ Could not refresh Spotify access token for user: ${userUid}. Error: ${err}`);
     }
   );
 }
