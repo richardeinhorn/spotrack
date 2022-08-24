@@ -28,6 +28,8 @@ mongoose.connect(process.env.DB_URI, {
   useUnifiedTopology: true,
 });
 
+// TODO: split routes into routers
+
 async function main() {
   app.use(cors());
   // app.use(bodyParser.urlencoded({ extended: false })) // parse application/x-www-form-urlencoded

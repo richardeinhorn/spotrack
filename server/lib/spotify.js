@@ -52,6 +52,58 @@ export async function addSpotifyRefreshTokenToUser(auth) {
   return user;
 }
 
+export async function getCurrentTrackFromUser(
+  spotifyApi,
+  calendarId,
+  userUid,
+  refreshToken,
+  accessToken,
+  processData
+) {
+  // set access token for current user
+  spotifyApi.setAccessToken(accessToken);
+
+  // fetch current track
+  spotifyApi.getMyCurrentPlayingTrack().then(
+    function (data) {
+      // on success, process data
+      processData(calendarId, userUid, data);
+    },
+    async function (err) {
+      // on error, try to refresh token
+      console.error("❌ Cron job failed on 1st attempt. " + err);
+      const newAccessToken = await refreshAccessToken(refreshToken, userUid);
+      if (!newAccessToken) return;
+
+      spotifyApi.setAccessToken(newAccessToken);
+
+      // then request current playing track again
+      spotifyApi.getMyCurrentPlayingTrack().then(
+        async function (data) {
+          // on success, process data
+          processData(calendarId, userUid, data);
+
+          // update user record with new access token
+          const { error: updateUserError } =
+            await supabase.auth.api.updateUserById(userUid, {
+              user_metadata: { access_token: newAccessToken },
+            });
+          if (updateUserError)
+            console.error(
+              "Error saving new access token to User record." + updateUserError
+            );
+          else console.info("Updated access token for user " + userUid);
+        },
+        function (err) {
+          return console.error(
+            "❌ Cron job failed on 2nd attempt. No data processed." + err
+          );
+        }
+      );
+    }
+  );
+}
+
 export async function refreshAccessToken(refresh_token, userUid) {
   spotifyApi.setRefreshToken(refresh_token);
   return spotifyApi.refreshAccessToken().then(

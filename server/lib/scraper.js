@@ -1,7 +1,7 @@
 import { addEvent, getEvent, updateLastEvent } from "./calendar";
-import { saveSongToDb, getLastSong } from "./db";
-import { refreshAccessToken } from "./spotify";
-import { supabase } from "./supabase";
+import { saveSongToDb, getLastSong } from "./mongoDb";
+import { getCurrentTrackFromUser } from "./spotify";
+import { getUsers } from "./supabase";
 
 // TODO: add timezone support
 function parseTrackEvent(songData) {
@@ -143,68 +143,8 @@ async function processData(calendarId, userUid, data) {
   }
 }
 
-// get all users from supabase db
-async function getUsers(supabase) {
-  const { data: users, error } = await supabase.auth.api.listUsers();
-  if (error) throw new Error(error);
-
-  console.info("Retrieved users from database.");
-  return users;
-}
-
-async function getCurrentTrackFromUser(
-  spotifyApi,
-  calendarId,
-  userUid,
-  refreshToken,
-  accessToken
-) {
-  // set access token for current user
-  spotifyApi.setAccessToken(accessToken);
-
-  // fetch current track
-  spotifyApi.getMyCurrentPlayingTrack().then(
-    function (data) {
-      // on success, process data
-      processData(calendarId, userUid, data);
-    },
-    async function (err) {
-      // on error, try to refresh token
-      console.error("❌ Cron job failed on 1st attempt. " + err);
-      const newAccessToken = await refreshAccessToken(refreshToken, userUid);
-      if (!newAccessToken) return;
-
-      spotifyApi.setAccessToken(newAccessToken);
-
-      // then request current playing track again
-      spotifyApi.getMyCurrentPlayingTrack().then(
-        async function (data) {
-          // on success, process data
-          processData(calendarId, userUid, data);
-
-          // update user record with new access token
-          const { error: updateUserError } =
-            await supabase.auth.api.updateUserById(userUid, {
-              user_metadata: { access_token: newAccessToken },
-            });
-          if (updateUserError)
-            console.error(
-              "Error saving new access token to User record." + updateUserError
-            );
-          else console.info("Updated access token for user " + userUid);
-        },
-        function (err) {
-          return console.error(
-            "❌ Cron job failed on 2nd attempt. No data processed." + err
-          );
-        }
-      );
-    }
-  );
-}
-
 export async function runCron(spotifyApi) {
-  const users = await getUsers(supabase);
+  const users = await getUsers();
 
   // loop through users and process data
   console.info(`⏲️ running cron job - looping through ${users.length} users.`);
@@ -224,7 +164,8 @@ export async function runCron(spotifyApi) {
       user.user_metadata.calendarId,
       user.id,
       user.user_metadata.refresh_token,
-      user.user_metadata.access_token
+      user.user_metadata.access_token,
+      processData
     );
   }
 }
