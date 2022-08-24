@@ -7,14 +7,13 @@ const colors = {
     200: "#62EC83",
   },
   secondary: {
-    400: "#1DB7B9",
+    800: "#14A496",
+    600: "#1DB7B9",
+    400: "#1AD3C0",
+    200: "#60EBDD",
   },
-  light: {
-    400: "#ffffff",
-  },
-  dark: {
-    400: "#191414",
-  }
+  light: "#ffffff",
+  dark: "#191414",
 };
 
 const theme = extendTheme({ colors });

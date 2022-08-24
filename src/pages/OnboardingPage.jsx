@@ -4,15 +4,9 @@ import "./App.css";
 import {
   Logo,
   SignupContainer,
-  StepNumber,
   AboutSection,
   CalendarEmailForm,
 } from "../components";
-import {
-  CalendarButton,
-  LoginButton,
-  TrackingButton,
-} from "../components/Buttons";
 import { supabase } from "../lib/supabase";
 import {
   getAccessToken,
@@ -20,6 +14,20 @@ import {
   handleError,
   validateEmail,
 } from "../lib/utils";
+import SignUpCard from "../components/SignUpCard";
+import { LoginImage, TrackingImage, CalendarImage } from "../assets";
+import { chakra, Text } from "@chakra-ui/react";
+import {
+  CardButton,
+  CardTitle,
+  CardTagline,
+} from "../components/SignUpCard/components";
+import { CalendarIcon, LinkIcon, UnlockIcon } from "@chakra-ui/icons";
+
+// TODO: add toast messages: https://chakra-ui.com/docs/components/toast
+// TODO: use stack to show onboarding boxes
+// TODO: delete outdated files (old buttons, stepnumber, css files)
+// TODO: fix dark mode (or remove)
 
 const OnboardingPage = () => {
   const [isDarkMode] = useState(getDarkModeSetting());
@@ -136,7 +144,7 @@ const OnboardingPage = () => {
     const session = supabase.auth.session();
     if (session) {
       setSession(session);
-      setUser(session?.user)
+      setUser(session?.user);
       setCalendarEmail(session?.user?.user_metadata?.email);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -155,7 +163,7 @@ const OnboardingPage = () => {
     );
     if (error) return handleError(error, setError);
     setUser(user);
-    console.log('user', JSON.stringify(user, null, 2))
+    console.log("user", JSON.stringify(user, null, 2));
     setCalendarEmail(user.user_metadata.email);
     setSession(session);
   };
@@ -173,7 +181,8 @@ const OnboardingPage = () => {
       const accessToken = getAccessToken(session, supabase, setError);
 
       // request calendar creation and user sharing from server
-      const res = await axios.post("/api/calendar/create",
+      const res = await axios.post(
+        "/api/calendar/create",
         { calendarEmail },
         {
           headers: { "X-Supabase-Auth": accessToken },
@@ -211,7 +220,8 @@ const OnboardingPage = () => {
       const accessToken = getAccessToken(session, supabase, setError);
 
       // request new calendar sharing and update user record on server
-      const res = await axios.post("/api/calendar/update",
+      const res = await axios.post(
+        "/api/calendar/update",
         { calendarEmail: newEmail },
         {
           headers: { "X-Supabase-Auth": accessToken },
@@ -232,42 +242,86 @@ const OnboardingPage = () => {
     setIsChangingEmailOnServer(false);
   };
 
+  const onAllowTracking = () => {
+    setIsAllowingTrackingOnSpotify(true);
+    window.location.replace(`${process.env.REACT_APP_API_URL}api/spotify/auth`);
+  };
+
   return (
-    <main className="app">
+    <chakra.main className="app" bg="primary.200">
       <Logo isDarkMode={isDarkMode} />
       <div className="content">
-        <SignupContainer>
-          <p className="info">
-            Start tracking songs in minutes for free. No credit card required.
-          </p>
-          <div
-            className={`step-container ${step === 1 ? "focus" : ""}`}
-            id="step-1"
+        <SignupContainer
+          headerComponent={
+            <Text fontSize="xl">
+              Track songs you listen to on Spotify. It's free.
+            </Text>
+          }
+        >
+          <SignUpCard
+            imageSrc={LoginImage}
+            imageAlt={"Login with Spotify"}
+            isActive={step === 1}
           >
-            <StepNumber number={1} />
-            <LoginButton
-              step={step}
-              onSignIn={onSignIn}
-              user={user}
-              isLoggingInOnSpotify={isLoggingInOnSpotify}
+            <CardTagline text="Create your account" />
+            <CardTitle
+              title="Login with Spotify to create your account"
+              isCompleted={step > 1}
+              successMsg={`✅ Hello ${user?.user_metadata?.name}!`}
+              isActive={step === 1}
             />
-          </div>
-          <div
-            className={`step-container ${step === 2 ? "focus" : ""}`}
-            id="step-2"
+            <CardButton
+              label="Login"
+              isLoading={isLoggingInOnSpotify}
+              onClick={onSignIn}
+              disabled={step !== 1}
+              icon={<UnlockIcon />}
+            />
+          </SignUpCard>
+          <SignUpCard
+            imageSrc={TrackingImage}
+            imageAlt={"Login with Spotify"}
+            isActive={step === 2}
           >
-            <StepNumber number={2} />
-            <TrackingButton
+            <CardTagline text="Grant access" />
+            <CardTitle
+              title="Let us record the songs you are listening to"
+              isCompleted={step > 2}
+              successMsg={`✅ Tracking songs.`}
+              isActive={step === 2}
+            />
+            <CardButton
+              label="Start tracking"
+              isLoading={isAllowingTrackingOnSpotify}
+              onClick={onAllowTracking}
+              disabled={step !== 2}
+              icon={<LinkIcon />}
+            />
+            {/* <TrackingButton
               step={step}
               isAllowingTrackingOnSpotify={isAllowingTrackingOnSpotify}
               onClick={() => setIsAllowingTrackingOnSpotify(true)}
-            />
-          </div>
-          <div
-            className={`step-container ${step === 3 ? "focus" : ""}`}
-            id="step-3"
+            /> */}
+          </SignUpCard>
+          <SignUpCard
+            imageSrc={CalendarImage}
+            imageAlt={"Login with Spotify"}
+            isActive={step === 3}
           >
-            <StepNumber number={3} />
+            <CardTagline text="Set up calendar" />
+            <CardTitle
+              title="Get your private Google calendar with all songs"
+              isCompleted={step > 3}
+              successMsg={`✅ Calendar created.`}
+              isActive={step === 3}
+            />
+            <CardButton
+              label="Create calendar"
+              isLoading={isCreatingCalendarOnServer}
+              onClick={onCreateCalendar}
+              disabled={step !== 3}
+              icon={<CalendarIcon />}
+            />
             {step === 3 && (
               <CalendarEmailForm
                 calendarEmail={calendarEmail}
@@ -275,12 +329,13 @@ const OnboardingPage = () => {
                 isCreatingCalendarOnServer={isCreatingCalendarOnServer}
               />
             )}
-            <CalendarButton
+            {/* <CalendarButton
               step={step}
               onConfirmEmail={async () => await onCreateCalendar()}
               isCreatingCalendarOnServer={isCreatingCalendarOnServer}
-            />
-          </div>
+            /> */}
+          </SignUpCard>
+
           {error && (
             <div
               className="alert alert-error"
@@ -374,7 +429,7 @@ const OnboardingPage = () => {
         </SignupContainer>
         <AboutSection />
       </div>
-    </main>
+    </chakra.main>
   );
 };
 
