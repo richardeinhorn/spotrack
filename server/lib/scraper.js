@@ -146,17 +146,21 @@ async function processData(calendarId, userUid, data) {
 export async function runCron(spotifyApi) {
   const users = await getUsers();
 
+  const activeUsers = users.filter((user) => !user.isPaused);
+
   // loop through users and process data
-  console.info(`⏲️ running cron job - looping through ${users.length} users.`);
+  console.info(
+    `⏲️ running cron job - looping through ${activeUsers.length} active users from ${users.length} total users.`
+  );
   var user;
-  for (let i = 0; i < users.length; i++) {
-    user = users[i];
+  for (let i = 0; i < activeUsers.length; i++) {
+    user = activeUsers[i];
 
     // user onboarding not completed - missing calendar or spotify authorization
     if (!user.user_metadata.calendarId || !user.user_metadata.refresh_token) {
       if (process.env.NODE_ENV !== "production")
         console.info(`User ${user.id} is not onboarded.`);
-      return;
+      continue;
     }
     // TODO: allow parallel processing
     await getCurrentTrackFromUser(

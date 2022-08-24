@@ -1,5 +1,5 @@
 import { google } from "googleapis";
-import { supabase } from  "./supabase";
+import { updateUserData } from "./supabase";
 
 const calendar = google.calendar("v3");
 
@@ -73,18 +73,6 @@ export async function shareCalendarWithUser(calendarId, calendarEmail) {
     );
 }
 
-export async function updateUserCalendarData(userUid, calendarId, calendarEmail) {
-// add calendar ID to supabase user record
-const { error: updateUserError } = await supabase.auth.api.updateUserById(
-  userUid,
-  { user_metadata: { calendarId, calendarEmail } }
-);
-if (updateUserError) throw new Error(updateUserError);
-console.info(
-  `added calendarId ${calendarId.substring(0, 9)}... to user ${userUid}`
-);
-}
-
 // TODO: add time zone support
 export async function createNewCalendar(userUid, calendarEmail) {
   // create new calendar
@@ -106,9 +94,12 @@ export async function createNewCalendar(userUid, calendarEmail) {
 
   // share the calendar with the user
   await shareCalendarWithUser(calendarId, calendarEmail);
-  
+
   // update user record with calendar ID and calendar email
-  await updateUserCalendarData(userUid, calendarId, calendarEmail)
+  await updateUserData(userUid, { calendarId, calendarEmail });
+  console.info(
+    `added calendarId ${calendarId.substring(0, 9)}... to user ${userUid}`
+  );
 
   return calendarId;
 }
@@ -130,7 +121,11 @@ export async function addEvent(calendarId, newEvent) {
   return id;
 }
 
-export async function updateLastEvent(calendarId, oldEventId, updatedEventInfo) {
+export async function updateLastEvent(
+  calendarId,
+  oldEventId,
+  updatedEventInfo
+) {
   const id = await calendar.events
     .patch({
       auth: jwtClient,

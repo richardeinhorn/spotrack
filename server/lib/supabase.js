@@ -14,3 +14,30 @@ export async function getUsers() {
   console.info("Retrieved users from database.");
   return users;
 }
+
+export async function deleteUser(userUid) {
+  const { data: user, error } = await supabase.auth.api.deleteUser(userUid);
+  if (error) throw new Error(error);
+
+  console.info(`Deleted user ${userUid} from database.`);
+  return user;
+}
+
+export async function updateUserData(userUid, newMetaData) {
+  const { data: user, error } = await supabase.auth.api.updateUserById(
+    userUid,
+    { user_metadata: newMetaData }
+  );
+  if (error) throw new Error(error);
+
+  console.info(`Updated meta data for user ${userUid}.`);
+  return user;
+}
+
+export async function getUserData(token) {
+  const { data: user, error } = await supabase.auth.api.getUser(token);
+  if (error) throw new Error(error);
+
+  console.info(`Fetched user data based on token.`);
+  return user;
+}

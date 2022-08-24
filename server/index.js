@@ -11,14 +11,11 @@ import {
   getSpotifyApi,
 } from "./lib/spotify";
 import path from "path";
-import {
-  createNewCalendar,
-  shareCalendarWithUser,
-  updateUserCalendarData,
-} from "./lib/calendar";
+import { createNewCalendar, shareCalendarWithUser } from "./lib/calendar";
 import bodyParser from "body-parser";
 import { isAuthorised } from "./lib/middleware";
 import { keepDynoAlive } from "./lib/utils";
+import { deleteUser, updateUserData } from "./lib/supabase";
 
 const app = express();
 
@@ -50,7 +47,7 @@ async function main() {
 
   // schedule cron job: run scraper every 10 seconds
   cron.schedule("*/10 * * * * *", async () => {
-    keepDynoAlive() // keep free tier dyno alive
+    keepDynoAlive(); // keep free tier dyno alive
 
     // run cron job
     if (!db) console.error("❌ failed to run cron job: no database connection");
@@ -94,7 +91,8 @@ async function main() {
         // get authorization code
         const auth = await getAuthorizationCode(code);
         console.info("received authorization code");
-        await addSpotifyRefreshTokenToUser(auth);
+        const user = await addSpotifyRefreshTokenToUser(auth);
+        if (user) await updateUserData(user.id, { isPaused: false });
 
         res.redirect(`${process.env.APP_URL}?callbackStep=2`);
       } catch (error) {
@@ -147,9 +145,34 @@ async function main() {
       await shareCalendarWithUser(calendarId, calendarEmail);
 
       // update user record with calendar ID and calendar email
-      await updateUserCalendarData(userUid, calendarId, calendarEmail);
+      await updateUserData(userUid, { calendarId, calendarEmail });
+      console.info(
+        `added calendarId ${calendarId.substring(0, 9)}... to user ${userUid}`
+      );
 
       res.send({ calendarId, calendarEmail });
+    } catch (error) {
+      res.status(500).send(error);
+    }
+  });
+
+  // POST [auth] - pause tracking for user
+  app.post("/api/user/pause", isAuthorised, async function (req, res) {
+    const databaseUser = res.locals.user;
+    try {
+      const user = await updateUserData(databaseUser.id, { isPaused: true });
+      res.send(user);
+    } catch (error) {
+      res.status(500).send(error);
+    }
+  });
+
+  // POST [auth] - delete user record
+  app.post("/api/user/delete", isAuthorised, async function (req, res) {
+    const databaseUser = res.locals.user;
+    try {
+      const user = await deleteUser(databaseUser.id);
+      res.status(204).send(user);
     } catch (error) {
       res.status(500).send(error);
     }
