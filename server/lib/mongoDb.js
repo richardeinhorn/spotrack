@@ -18,5 +18,10 @@ export async function getLastSong(userUid) {
   return lastSongs[0];
 }
 
+export async function countSongs(userUid) {
+  const count = await SongModel.countDocuments({ userUid });
+  return count;
+}
+
 // TODO: add subscription to change stream to update stats in realtime (websocket with FE)
 // https://mongoosejs.com/docs/change-streams.html

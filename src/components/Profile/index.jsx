@@ -25,7 +25,7 @@ const ProfileCard = () => {
         lineHeight="1.3"
         marginBottom="20px"
       >
-        {isUserPaused ? "Spotrack is running" : "Spotrack is paused"}
+        {isUserPaused ? "Spotrack is paused" : "Spotrack is running"}
       </Text>
       <Accordion defaultIndex={[0]} allowMultiple>
         <AccordionElement title="Add your calendar in Google Calendar">

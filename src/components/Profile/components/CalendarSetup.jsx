@@ -80,7 +80,7 @@ const CalendarSetup = ({ initialValue }) => {
             <Button
               id="cancel-new-email-btn"
               type="button"
-              isLoading={isChangingEmailOnServer}
+              disabled={isChangingEmailOnServer}
               variant="outline"
               onClick={() => setIsChangingEmail(false)}
               minWidth="90px"

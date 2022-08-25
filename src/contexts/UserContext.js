@@ -39,9 +39,11 @@ export const UserContextProvider = ({ children }) => {
     if (res.statusCode === 204) {
       setIsDeletingUser(false);
       supabase.auth.logout();
+      setUser(null);
+      setSession(null);
 
       // reload page
-      window.location.reload(false);
+      window.location.reload();
     } else {
       console.error("Error deleting user");
       setUserError(res.statusText);
@@ -59,7 +61,7 @@ export const UserContextProvider = ({ children }) => {
       headers: { "X-Supabase-Auth": session?.access_token },
     });
     if (res.statusCode === 200) {
-      setIsUserPaused(res.data?.user_metadata?.isPaused);
+      setIsUserPaused(true);
     } else {
       console.error("Error pausing user");
       setUserError(res.statusText);
@@ -77,7 +79,7 @@ export const UserContextProvider = ({ children }) => {
       headers: { "X-Supabase-Auth": session?.access_token },
     });
     if (res.statusCode === 200) {
-      setIsUserPaused(res.data?.user_metadata?.isPaused);
+      setIsUserPaused(false);
     } else {
       console.error("Error unpausing user");
       setUserError(res.statusText);
@@ -112,6 +114,7 @@ export const UserContextProvider = ({ children }) => {
       return;
     }
     setUser(user);
+    setIsUserPaused(user.user_metadata?.isPaused);
 
     setIsFetchingUser(false);
     return user;

@@ -16,6 +16,7 @@ import bodyParser from "body-parser";
 import { isAuthorised } from "./lib/middleware";
 import { keepDynoAlive } from "./lib/utils";
 import { deleteUser, updateUserData } from "./lib/supabase";
+import { countSongs } from "./lib/mongoDb";
 
 const app = express();
 
@@ -166,7 +167,7 @@ async function main() {
       res.status(500).send(error);
     }
   });
-  
+
   // POST [auth] - unpause tracking for user
   app.post("/api/user/unpause", isAuthorised, async function (req, res) {
     const databaseUser = res.locals.user;
@@ -184,6 +185,17 @@ async function main() {
     try {
       const user = await deleteUser(databaseUser.id);
       res.status(204).send(user);
+    } catch (error) {
+      res.status(500).send(error);
+    }
+  });
+
+  // GET [auth] - get statistics
+  app.get("/api/user/stats", isAuthorised, async function (req, res) {
+    const databaseUser = res.locals.user;
+    try {
+      const count = await countSongs(databaseUser.id);
+      res.status(204).send({ statistics: { count } });
     } catch (error) {
       res.status(500).send(error);
     }
