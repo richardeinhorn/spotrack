@@ -13,7 +13,7 @@
 - [x] Capture listening from all your devices
 - [x] Secure [OAuth 2.0](https://oauth.net/2/) authentication to connect to your Spotify account
 
-![Screenshot of Spotrack Sign-Up Process](/assets/SpotrackSuccess.png "Simple Sign-Up")
+![Screenshot of Spotrack Sign-Up Process](/assets/Spotrack.png "Simple Sign-Up")
 
 ## Setup
 
