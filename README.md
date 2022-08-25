@@ -53,8 +53,10 @@ yarn dev && cd server/ && yarn dev
 
 ## Roadmap
 
+- [ ] Mobile display
+- [ ] Event queues
 - [ ] Monitoring and automated testing
-- [ ] Support for additional calendars
+- [ ] Support for additional calendars (iCalendar)
 - [ ] Add dashboard with listening statistics
 - [ ] Move all data into relational DB
 

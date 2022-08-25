@@ -21,7 +21,7 @@ const UserProfile = () => {
           leftIcon={<TimeIcon />}
           onClick={togglePausingUser}
           variant="outline"
-          colorScheme="orange"
+          colorScheme={isUserPaused ? "green" : "orange"}
           >
           {isUserPaused ? "Resume" : "Pause"}
         </Button>

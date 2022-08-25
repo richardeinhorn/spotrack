@@ -1,24 +1,21 @@
+import { WarningTwoIcon } from "@chakra-ui/icons";
 import {
   Accordion,
   Center,
   Flex,
+  Spinner,
   Stat,
   StatLabel,
   StatNumber,
   Text,
 } from "@chakra-ui/react";
-import React, { useEffect } from "react";
+import React from "react";
 import { useUserContext } from "../../contexts/UserContext";
 import { CalendarSetup, UserProfile } from "./components";
 import AccordionElement from "./components/AccordionElement";
 
 const ProfileCard = ({ id }) => {
-  const { user, isUserPaused, userStats, getUserStatistics } = useUserContext();
-
-  useEffect(() => {
-    if (!userStats && getUserStatistics) getUserStatistics();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { user, isUserPaused, userStats } = useUserContext();
 
   return (
     <Flex
@@ -40,7 +37,8 @@ const ProfileCard = ({ id }) => {
         marginBottom="20px"
         align="left"
       >
-        {isUserPaused ? "Spotrack is paused" : "Spotrack is running"}
+        {isUserPaused ? "Spotrack is paused  " : "Spotrack is running  "}
+        {isUserPaused ? <WarningTwoIcon /> : <Spinner />}
       </Text>
       {userStats?.count && (
         <Center margin="20px auto 25px auto" align="center">

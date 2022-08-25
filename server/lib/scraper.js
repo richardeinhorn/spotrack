@@ -84,12 +84,16 @@ async function addNewSongEvent(calendarId, userUid, data, songData) {
 async function processData(calendarId, userUid, data) {
   // do not process if not playing
   if (!data.body || !data.body.is_playing) return;
+  // TODO: finish last song early if needed
+  
+  // TODO: what happens if you quickly skip the song
 
   // get last song from DB
   const lastSong = await getLastSong(userUid);
   const songData = data.body;
   if (songData.currently_playing_type === "track") {
     if (lastSong && lastSong.uri === songData.item.uri) {
+      // TODO: update endTime
       // console.log(`🎵 song for user ${userUid} already saved: ${songData.item.name}`);
     } else {
       // if skipped last song (with 3s threshhold)
@@ -146,7 +150,7 @@ async function processData(calendarId, userUid, data) {
 export async function runCron(spotifyApi) {
   const users = await getUsers();
 
-  const activeUsers = users.filter((user) => !user.isPaused);
+  const activeUsers = users.filter((user) => !user.user_metadata.isPaused);
 
   // loop through users and process data
   console.info(

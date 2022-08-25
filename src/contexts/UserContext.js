@@ -98,6 +98,21 @@ export const UserContextProvider = ({ children }) => {
     setUser(null);
   };
 
+  // get user statistics
+  const getUserStatistics = async (token) => {
+    if (!token && !checkUserToken()) return;
+    console.debug("fetching user statistics");
+  
+    const res = await axios.get("/api/user/stats", {
+      headers: { "X-Supabase-Auth": session?.access_token || token },
+    });
+    if (res.status === 200) {
+      setUserStats(res.data?.statistics);
+    } else {
+      console.error("Error fetching user statistics");
+    }
+  };
+
   // fetch complete user record from supabase
   const getUserFromDatabase = async (token = undefined) => {
     if (!token && !checkUserToken()) return;
@@ -117,23 +132,11 @@ export const UserContextProvider = ({ children }) => {
     setUser(user);
     setIsUserPaused(user.user_metadata?.isPaused);
 
+    // also update user statistics
+    await getUserStatistics(token);
+
     setIsFetchingUser(false);
     return user;
-  };
-
-  // get user statistics
-  const getUserStatistics = async (token) => {
-    if (!token && !checkUserToken()) return;
-    console.debug("fetching user statistics");
-  
-    const res = await axios.get("/api/user/stats", {
-      headers: { "X-Supabase-Auth": session?.access_token || token },
-    });
-    if (res.status === 200) {
-      setUserStats(res.data?.statistics);
-    } else {
-      console.error("Error fetching user statistics");
-    }
   };
 
   // initiate session and user
@@ -159,7 +162,7 @@ export const UserContextProvider = ({ children }) => {
       setSession(session);
       setUser(session.user);
       console.debug("sign in event detected");
-      getUserStatistics(session.access_token);
+      await getUserStatistics(session.access_token);
     }
   });
 
