@@ -1,13 +1,9 @@
 import React from "react";
 import { VStack, Divider, Text } from '@chakra-ui/react'
 
-// TODO: add Highlight https://chakra-ui.com/docs/components/highlight
-// TODO: use Heading components: https://chakra-ui.com/docs/components/heading
-// TODO: use Text component everywhere: https://chakra-ui.com/docs/components/text
-
 const AboutSection = () => {
   return (
-    <VStack maxWidth={700} border="none">
+    <VStack maxWidth={700} border="none" margin="10px auto 30px auto">
       <Divider marginBottom={5} bg="black" />
       <Text textAlign="center" fontSize="l">
         Spotrack records your Spotify listening to your Google calendar. Travel

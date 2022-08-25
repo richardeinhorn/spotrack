@@ -166,6 +166,17 @@ async function main() {
       res.status(500).send(error);
     }
   });
+  
+  // POST [auth] - unpause tracking for user
+  app.post("/api/user/unpause", isAuthorised, async function (req, res) {
+    const databaseUser = res.locals.user;
+    try {
+      const user = await updateUserData(databaseUser.id, { isPaused: false });
+      res.send(user);
+    } catch (error) {
+      res.status(500).send(error);
+    }
+  });
 
   // POST [auth] - delete user record
   app.post("/api/user/delete", isAuthorised, async function (req, res) {

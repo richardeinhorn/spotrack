@@ -6,7 +6,7 @@ const CardTitle = ({ title, isCompleted, successMsg, isActive = false }) => {
     <Text
       fontSize="3xl"
       fontWeight="bold"
-      color={isActive ? "dark" : "gray.500"}
+      color={isCompleted ? "secondary.600" : isActive ? "dark" : "gray.500"}
       lineHeight="1.3"
     >
       {isCompleted ? successMsg : title}

@@ -1,8 +1,8 @@
 import React from "react";
 
 const CalendarEmailForm = ({
-  calendarEmail,
-  setCalendarEmail,
+  email,
+  setEmail,
   isCreatingCalendarOnServer,
 }) => {
   return (
@@ -12,6 +12,7 @@ const CalendarEmailForm = ({
         flexDirection: "column",
         justifyContent: "center",
         alignItems: "flex-start",
+        marginTop: "10px",
       }}
     >
       <label htmlFor="calendar-email" style={{ fontSize: "0.9em" }}>
@@ -24,9 +25,10 @@ const CalendarEmailForm = ({
           id="calendar-email"
           aria-describedby="basic-addon3"
           name="calendarEmail"
-          value={calendarEmail}
-          onChange={(event) => setCalendarEmail(event.target.value)}
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
           disabled={isCreatingCalendarOnServer}
+          style={{ width: "100%" }}
         />
       </div>
     </div>
