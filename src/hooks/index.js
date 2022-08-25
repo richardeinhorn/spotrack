@@ -1,5 +1,5 @@
 import useCalendar from "./useCalendar";
 import useSpotify from "./useSpotify";
-import useUser from "./useUser";
+import useToasts from "./useToasts";
 
-export { useCalendar, useSpotify, useUser };
+export { useCalendar, useSpotify, useToasts };

@@ -17,3 +17,6 @@ export async function getLastSong(userUid) {
     .limit(1);
   return lastSongs[0];
 }
+
+// TODO: add subscription to change stream to update stats in realtime (websocket with FE)
+// https://mongoosejs.com/docs/change-streams.html

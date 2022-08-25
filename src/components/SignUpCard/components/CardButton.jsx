@@ -10,6 +10,7 @@ const CardButton = ({ label, onClick, icon, isLoading, ...buttonProps }) => {
       onClick={onClick}
       leftIcon={icon}
       bg="secondary.600"
+      _hover={{ bg: "secondary.800" }}
       size="lg"
       variant="solid"
       color="white"

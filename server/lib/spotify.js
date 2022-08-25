@@ -84,7 +84,7 @@ export async function getCurrentTrackFromUser(
         },
         function (err) {
           return console.error(
-            "❌ Cron job failed on 2nd attempt. No data processed." + err
+            "❌ Cron job failed on 2nd attempt. No data processed." + JSON.stringify(err)
           );
         }
       );

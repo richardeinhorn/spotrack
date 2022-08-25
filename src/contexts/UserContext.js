@@ -1,10 +1,10 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
+import React, { createContext, useState, useContext, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 
-// TODO: use hook and capture states (isPausing, isPaused, isDeleting)
+const UserContext = createContext(undefined);
 
-const useUser = () => {
+export const UserContextProvider = ({ children }) => {
   const [isDeletingUser, setIsDeletingUser] = useState(false);
   const [isPausingUser, setIsPausingUser] = useState(false);
   const [isUserPaused, setIsUserPaused] = useState(null);
@@ -14,13 +14,11 @@ const useUser = () => {
   const [isFetchingUser, setIsFetchingUser] = useState(false);
 
   const checkUserToken = () => {
-    console.log(
-      "session?.access_token",
-      JSON.stringify(session?.access_token, null, 2)
-    );
+    console.debug("retrieving access token");
     if (!session?.access_token) {
       const session = supabase.auth.session();
       if (!session) {
+        console.error("No access token found in local session");
         setUserError("No access token");
         return false;
       } else setSession(session);
@@ -32,6 +30,7 @@ const useUser = () => {
   // delete user profile from Spotrack service
   const deleteUserProfile = async () => {
     if (!checkUserToken()) return;
+    console.debug("deleting user profile");
     setIsDeletingUser(true);
 
     const res = await axios.post("/api/user/delete", null, {
@@ -53,6 +52,7 @@ const useUser = () => {
   // pause tracking for user
   const pauseUser = async () => {
     if (!checkUserToken()) return;
+    console.debug("pausing tracking for user");
     setIsPausingUser(true);
 
     const res = await axios.post("/api/user/pause", null, {
@@ -70,6 +70,7 @@ const useUser = () => {
   // resume tracking for user
   const unpauseUser = async () => {
     if (!checkUserToken()) return;
+    console.debug("unpausing tracking for user");
     setIsPausingUser(true);
 
     const res = await axios.post("/api/user/unpause", null, {
@@ -87,6 +88,7 @@ const useUser = () => {
   const togglePausingUser = () => (isUserPaused ? unpauseUser() : pauseUser());
 
   const signoutUser = async () => {
+    console.debug("signing out user.");
     console.log("Please sign in again.");
     await supabase.auth.signOut();
     setSession(null);
@@ -97,6 +99,7 @@ const useUser = () => {
   const getUserFromDatabase = async (token = undefined) => {
     if (!token && !checkUserToken()) return;
     setIsFetchingUser(true);
+    console.debug("fetching user record from database.");
 
     const { user, error } = await supabase.auth.api.getUser(
       token || session?.access_token
@@ -136,28 +139,34 @@ const useUser = () => {
     if (event === "SIGNED_IN") {
       setSession(session);
       setUser(session.user);
-      console.log("useUser updating after login");
+      console.debug("sign in event detected");
     }
   });
 
-  useEffect(() => console.log("user", JSON.stringify(user, null, 2)), [user]);
-
-  return {
-    deleteUserProfile,
-    pauseUser,
-    unpauseUser,
-    togglePausingUser,
-    reloadUser: getUserFromDatabase,
-    userError,
-    isDeletingUser,
-    isPausingUser,
-    isUserPaused,
-    isFetchingUser,
-    user,
-    calendarId: user?.user_metadata?.calendarId,
-    calendarEmail: user?.user_metadata?.calendarEmail,
-    access_token: session?.access_token,
-  };
+  return (
+    <UserContext.Provider
+      value={{
+        deleteUserProfile,
+        pauseUser,
+        unpauseUser,
+        togglePausingUser,
+        reloadUser: getUserFromDatabase,
+        userError,
+        isDeletingUser,
+        isPausingUser,
+        isUserPaused,
+        isFetchingUser,
+        user,
+        calendarId: user?.user_metadata?.calendarId,
+        calendarEmail: user?.user_metadata?.calendarEmail,
+        access_token: session?.access_token,
+      }}
+    >
+      {children}
+    </UserContext.Provider>
+  );
 };
 
-export default useUser;
+export const useUserContext = () => {
+  return useContext(UserContext);
+};

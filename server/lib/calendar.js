@@ -68,9 +68,10 @@ export async function shareCalendarWithUser(calendarId, calendarEmail) {
       console.log("✅ Calendar shared with user");
       if (res.data) return res.data;
     })
-    .catch((error) =>
-      console.error(`❌ Error sharing calendar with user: ${error}`)
-    );
+    .catch((error) => {
+      console.error(`❌ Error sharing calendar with user: ${error}`);
+      throw new Error(error);
+    });
 }
 
 // TODO: add time zone support

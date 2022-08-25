@@ -1,19 +1,32 @@
 import React from "react";
 import { Square, Divider, Flex, Image, VStack } from "@chakra-ui/react";
+import { motion } from "framer-motion";
 
-// TODO: Add transition on first load (spaced slideFade: https://chakra-ui.com/docs/components/transitions)
-// TODO: Add tooltips with explanation for email: https://chakra-ui.com/docs/components/tooltip
-// TODO: use spinners to indicate loading: https://chakra-ui.com/docs/components/spinner
-// TODO: add fun loading messages
+// TODO: add loading messages
 
-const SignUpCard = ({ imageSrc, imageAlt, children, isActive = false }) => {
+const itemAnimation = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1 },
+};
+
+const SignUpCard = ({
+  key,
+  imageSrc,
+  imageAlt,
+  children,
+  isActive = false,
+}) => {
+  const AnimatedFlex = motion(Flex);
+
   return (
-    <Flex
+    <AnimatedFlex
+      key={key}
       bg="white"
       w="300px"
-      boxShadow={isActive ? '2xl' : undefined}
+      boxShadow={isActive ? "2xl" : undefined}
       direction="column"
       style={{ borderRadius: 20, overflow: "hidden" }}
+      variants={itemAnimation}
     >
       <Square h="300px" w="300px">
         <Image src={imageSrc} alt={imageAlt} />
@@ -22,7 +35,7 @@ const SignUpCard = ({ imageSrc, imageAlt, children, isActive = false }) => {
       <VStack flex="1" w="300px" padding="25px" align="flex-start">
         {children}
       </VStack>
-    </Flex>
+    </AnimatedFlex>
   );
 };
 

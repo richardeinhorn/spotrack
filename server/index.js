@@ -106,16 +106,16 @@ async function main() {
   app.post("/api/calendar/create", isAuthorised, async function (req, res) {
     const databaseUser = res.locals.user;
     const userUid = databaseUser.id;
-    const calendarEmail = req.body.calendarEmail;
+    const email = req.body.email;
 
     console.info(`📅 creating calendar for user ${userUid}`);
     try {
       // check if user already has a calendar
       var calendarId = databaseUser.user_metadata.calendarId;
       if (!calendarId) {
-        calendarId = await createNewCalendar(userUid, calendarEmail);
+        calendarId = await createNewCalendar(userUid, email);
       }
-      res.send({ calendarId, calendarEmail });
+      res.send({ calendarId, email });
     } catch (error) {
       res.status(500).send(error);
     }

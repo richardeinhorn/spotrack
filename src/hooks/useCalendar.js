@@ -1,7 +1,8 @@
 import axios from "axios";
 import { useState } from "react";
 import { handleError, validateEmail } from "../lib/utils";
-import useUser from "./useUser";
+import { useUserContext } from "../contexts/UserContext";
+import useToasts from "./useToasts";
 
 const useCalendar = () => {
   const [isCreatingCalendarOnServer, setisCreatingCalendarOnServer] =
@@ -9,7 +10,8 @@ const useCalendar = () => {
   const [isChangingEmailOnServer, setIsChangingEmailOnServer] = useState(false);
   const [calendarError, setCalendarError] = useState(null);
 
-  const { access_token, reloadUser, calendarEmail } = useUser();
+  const { access_token, reloadUser, calendarEmail } = useUserContext();
+  const { showToast } = useToasts();
 
   const createCalendar = async (email) => {
     setCalendarError(null);
@@ -35,15 +37,10 @@ const useCalendar = () => {
         const errorMsg = "Couldn't create calendar";
         return handleError(errorMsg, setCalendarError);
       }
-      process.env.NODE_ENV !== "production" &&
-        console.info(`Created calendar with id: ${calendarId}`);
+      console.debug(`Created calendar with id: ${calendarId}`);
+      showToast("success", "🎉 Congratulations", "Songs will now be added to your calendar.")
 
       reloadUser();
-      // if (res?.data?.calendarEmail) setCalendarEmail(res?.data?.calendarEmail);
-
-      // complete signup process
-      // setStep(4);
-      // setCalendarId(calendarId);
     } catch (error) {
       handleError(error, setCalendarError);
     } finally {
@@ -78,10 +75,8 @@ const useCalendar = () => {
         console.info(`Changed email address for calendar: ${calendarId}`);
 
       reloadUser();
-      // if (res?.data?.calendarEmail) setCalendarEmail(res?.data?.calendarEmail);
     }
 
-    // setIsChangingEmail(false);
     onSuccess && onSuccess();
     setIsChangingEmailOnServer(false);
   };

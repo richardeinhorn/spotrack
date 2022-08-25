@@ -6,32 +6,27 @@ import {
   SignupContainer,
   AboutSection,
   CalendarEmailForm,
-} from "../components";
-import { getDarkModeSetting } from "../lib/utils";
-import SignUpCard from "../components/SignUpCard";
-import { LoginImage, TrackingImage, CalendarImage } from "../assets";
-import { Box, chakra, Text } from "@chakra-ui/react";
-import {
+  AnimatedBox,
   CardButton,
   CardTitle,
+  ProfileCard,
   CardTagline,
-} from "../components/SignUpCard/components";
+  SignUpCard,
+} from "../components";
+import { LoginImage, TrackingImage, CalendarImage } from "../assets";
+import { chakra, Text } from "@chakra-ui/react";
 import { CalendarIcon, LinkIcon, UnlockIcon } from "@chakra-ui/icons";
-import ProfileCard from "../components/Profile";
-import { useSpotify, useUser, useCalendar } from "../hooks";
+import { useSpotify, useCalendar } from "../hooks";
+import { useUserContext } from "../contexts/UserContext";
 
-// TODO: add toast messages: https://chakra-ui.com/docs/components/toast
-// TODO: delete outdated files (old buttons, utils, stepnumber, css files)
-// TODO: fix dark mode (or remove)
-// TODO: error display
+// TODO: error display and error handling
 
 const OnboardingPage = () => {
   const queryParams = new URLSearchParams(window.location.search);
-  const [isDarkMode] = useState(getDarkModeSetting());
-  const [step, setStep] = useState(1);
+  const [signupStep, setSignupStep] = useState(1);
   const [email, setEmail] = useState("");
 
-  const { user } = useUser();
+  const { user } = useUserContext();
   const {
     signInWithSpotify,
     isLoggingInOnSpotify,
@@ -51,111 +46,122 @@ const OnboardingPage = () => {
     // set Spotify email as default email for new calendar
     if (!email) setEmail(user?.email);
 
-    console.log("Setting step and email.")
+    console.log("Setting step and email.");
 
-    if (user?.user_metadata?.calendarId) return setStep(4);
-    if (user?.user_metadata?.refresh_token) return setStep(3);
-    if (user?.id) return setStep(2);
-    return setStep(1);
+    if (user?.user_metadata?.calendarId) setSignupStep(4);
+    else if (user?.user_metadata?.refresh_token) setSignupStep(3);
+    else if (user?.id) setSignupStep(2);
+    else setSignupStep(1);
   }, [user]);
 
   return (
-    <chakra.main className="app" bg="primary.200">
-      <Logo isDarkMode={isDarkMode} />
+    <chakra.main className="app">
+      <Logo />
       <Text fontSize="xl" marginBottom={30} textAlign="center">
         Track songs you listen to on Spotify. Easy setup, free to use.
       </Text>
-      <Box className="content">
-        {step === 4 ? <ProfileCard user={user} /> : (<SignupContainer>
-          <SignUpCard
-            imageSrc={LoginImage}
-            imageAlt={"Login with Spotify"}
-            isActive={step === 1}
-          >
-            <CardTagline
-              text={step > 1 ? "Account setup" : "Create your account"}
-            />
-            <CardTitle
-              title="Login with Spotify to create your account"
-              isCompleted={step > 1}
-              successMsg={`Hello ${user?.user_metadata?.name}`}
-              isActive={step === 1}
-            />
-            {step === 1 && (
-              <CardButton
-                label="Login"
-                isLoading={isLoggingInOnSpotify}
-                onClick={signInWithSpotify}
-                disabled={step !== 1}
-                icon={<UnlockIcon />}
-              />
-            )}
-          </SignUpCard>
-          <SignUpCard
-            imageSrc={TrackingImage}
-            imageAlt={"Login with Spotify"}
-            isActive={step === 2}
-          >
-            <CardTagline text={step > 2 ? "Spotify setup" : "Grant access"} />
-            <CardTitle
-              title="Let us record the songs you are listening to"
-              isCompleted={step > 2}
-              successMsg={`Tracking songs.`}
-              isActive={step === 2}
-            />
-            {step === 2 && (
-              <CardButton
-                label="Start tracking"
-                isLoading={isAllowingTrackingOnSpotify}
-                onClick={allowSpotifyTracking}
-                disabled={step !== 2}
-                icon={<LinkIcon />}
-              />
-            )}
-          </SignUpCard>
-          <SignUpCard
-            imageSrc={CalendarImage}
-            imageAlt={"Login with Spotify"}
-            isActive={step === 3}
-          >
-            <CardTagline
-              text={step > 3 ? "Google Calendar setup" : "Set up calendar"}
-            />
-            <CardTitle
-              title="Get your private Google calendar with all songs"
-              isCompleted={step > 3}
-              successMsg={`All done!`}
-              isActive={step === 3}
-            />
-            {step === 3 && (
-              <CalendarEmailForm
-                email={email}
-                setEmail={setEmail}
-                isCreatingCalendarOnServer={isCreatingCalendarOnServer}
-              />
-            )}
-            {step === 3 && (
-              <CardButton
-                label="Create calendar"
-                isLoading={isCreatingCalendarOnServer}
-                onClick={() => createCalendar(email)}
-                disabled={step !== 3}
-                icon={<CalendarIcon />}
-              />
-            )}
-          </SignUpCard>
-
-          {false && (
-            <div
-              className="alert alert-error"
-              role="alert"
-              style={{ marginTop: 10 }}
+      <AnimatedBox>
+        {signupStep === 4 ? (
+          <ProfileCard key={"profile-card"} />
+        ) : (
+          <SignupContainer>
+            <SignUpCard
+              key={"signup-card-1"}
+              imageSrc={LoginImage}
+              imageAlt={"Login with Spotify"}
+              isActive={signupStep === 1}
             >
-              {`⚠ Error. Please reload the page and try again.`}
-            </div>
-          )}
-        </SignupContainer>)}
-      </Box>
+              <CardTagline
+                text={signupStep > 1 ? "Account setup" : "Create your account"}
+              />
+              <CardTitle
+                title="Login with Spotify to create your account"
+                isCompleted={signupStep > 1}
+                successMsg={`Hello ${user?.user_metadata?.name}`}
+                isActive={signupStep === 1}
+              />
+              {signupStep === 1 && (
+                <CardButton
+                  label="Login"
+                  isLoading={isLoggingInOnSpotify}
+                  onClick={signInWithSpotify}
+                  disabled={signupStep !== 1}
+                  icon={<UnlockIcon />}
+                />
+              )}
+            </SignUpCard>
+            <SignUpCard
+              key={"signup-card-2"}
+              imageSrc={TrackingImage}
+              imageAlt={"Login with Spotify"}
+              isActive={signupStep === 2}
+            >
+              <CardTagline
+                text={signupStep > 2 ? "Spotify setup" : "Grant access"}
+              />
+              <CardTitle
+                title="Let us record the songs you are listening to"
+                isCompleted={signupStep > 2}
+                successMsg={`Tracking songs.`}
+                isActive={signupStep === 2}
+              />
+              {signupStep === 2 && (
+                <CardButton
+                  label="Start tracking"
+                  isLoading={isAllowingTrackingOnSpotify}
+                  onClick={allowSpotifyTracking}
+                  disabled={signupStep !== 2}
+                  icon={<LinkIcon />}
+                />
+              )}
+            </SignUpCard>
+            <SignUpCard
+              key={"signup-card-3"}
+              imageSrc={CalendarImage}
+              imageAlt={"Login with Spotify"}
+              isActive={signupStep === 3}
+            >
+              <CardTagline
+                text={
+                  signupStep > 3 ? "Google Calendar setup" : "Set up calendar"
+                }
+              />
+              <CardTitle
+                title="Get your private Google calendar with all songs"
+                isCompleted={signupStep > 3}
+                successMsg={`All done!`}
+                isActive={signupStep === 3}
+              />
+              {signupStep === 3 && (
+                <CalendarEmailForm
+                  email={email}
+                  setEmail={setEmail}
+                  isCreatingCalendarOnServer={isCreatingCalendarOnServer}
+                />
+              )}
+              {signupStep === 3 && (
+                <CardButton
+                  label="Create calendar"
+                  isLoading={isCreatingCalendarOnServer}
+                  onClick={() => createCalendar(email || user?.email)}
+                  disabled={signupStep !== 3}
+                  icon={<CalendarIcon />}
+                />
+              )}
+            </SignUpCard>
+
+            {false && (
+              <div
+                className="alert alert-error"
+                role="alert"
+                style={{ marginTop: 10 }}
+              >
+                {`⚠ Error. Please reload the page and try again.`}
+              </div>
+            )}
+          </SignupContainer>
+        )}
+      </AnimatedBox>
       <AboutSection />
     </chakra.main>
   );

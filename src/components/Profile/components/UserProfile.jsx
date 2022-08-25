@@ -1,43 +1,43 @@
 import React from "react";
 import { TimeIcon, WarningIcon } from "@chakra-ui/icons";
-import { Button, Flex, Text, Tooltip } from "@chakra-ui/react";
-import useUser from "../../../hooks/useUser";
+import { Box, Button, ButtonGroup, Center } from "@chakra-ui/react";
+import { useUserContext } from "../../../contexts/UserContext";
 
-const UserProfile = ({ user }) => {
+const UserProfile = () => {
   const {
     deleteUserProfile,
     togglePausingUser,
-    userError,
     isDeletingUser,
     isPausingUser,
     isUserPaused,
-  } = useUser();
+  } = useUserContext();
 
   return (
-    <Flex alignItems="center">
-      <Text flex="1">{`Name: ${user?.user_metadata?.name}`}</Text>
-      {userError && (
-        <Tooltip label={userError} placement="bottom">
-          <WarningIcon color="red" />
-        </Tooltip>
-      )}
-      <Button
-        isLoading={isPausingUser}
-        leftIcon={<TimeIcon />}
-        onClick={togglePausingUser}
-      >
-        {isUserPaused ? "Resume" : "Pause"}
-      </Button>
-      <Button
-        isLoading={isDeletingUser}
-        bg="red"
-        color="white"
-        leftIcon={<WarningIcon />}
-        onClick={deleteUserProfile}
-      >
-        Delete
-      </Button>
-    </Flex>
+    <Box margin="20px 0px">
+      <Center>
+        <ButtonGroup gap="4">
+        <Button
+          isLoading={isPausingUser}
+          leftIcon={<TimeIcon />}
+          onClick={togglePausingUser}
+          variant="outline"
+          colorScheme="orange"
+          >
+          {isUserPaused ? "Resume" : "Pause"}
+        </Button>
+        <Button
+          isLoading={isDeletingUser}
+          _hover={{ bg: "red", color: "white" }}
+          colorScheme="red"
+          variant="outline"
+          leftIcon={<WarningIcon />}
+          onClick={deleteUserProfile}
+        >
+          Delete
+        </Button>
+        </ButtonGroup>
+      </Center>
+    </Box>
   );
 };
 
