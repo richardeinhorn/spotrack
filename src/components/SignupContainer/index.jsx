@@ -14,7 +14,7 @@ const containerAnimation = {
   },
 };
 
-const SignupContainer = ({ children }) => {
+const SignupContainer = ({ children, id }) => {
   const AnimatedHStack = motion(HStack);
 
   return (
@@ -26,6 +26,7 @@ const SignupContainer = ({ children }) => {
       variants={containerAnimation}
       initial="hidden"
       animate="show"
+      key={id}
     >
       {children}
     </AnimatedHStack>

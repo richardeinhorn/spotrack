@@ -46,7 +46,7 @@ const OnboardingPage = () => {
     // set Spotify email as default email for new calendar
     if (!email) setEmail(user?.email);
 
-    console.log("Setting step and email.");
+    console.debug("Setting step and email.");
 
     if (user?.user_metadata?.calendarId) setSignupStep(4);
     else if (user?.user_metadata?.refresh_token) setSignupStep(3);
@@ -62,11 +62,11 @@ const OnboardingPage = () => {
       </Text>
       <AnimatedBox>
         {signupStep === 4 ? (
-          <ProfileCard key={"profile-card"} />
+          <ProfileCard id={"profile-card"} />
         ) : (
-          <SignupContainer>
+          <SignupContainer id={"signup-box"}>
             <SignUpCard
-              key={"signup-card-1"}
+              id={"signup-card-1"}
               imageSrc={LoginImage}
               imageAlt={"Login with Spotify"}
               isActive={signupStep === 1}
@@ -91,7 +91,7 @@ const OnboardingPage = () => {
               )}
             </SignUpCard>
             <SignUpCard
-              key={"signup-card-2"}
+              id={"signup-card-2"}
               imageSrc={TrackingImage}
               imageAlt={"Login with Spotify"}
               isActive={signupStep === 2}
@@ -116,7 +116,7 @@ const OnboardingPage = () => {
               )}
             </SignUpCard>
             <SignUpCard
-              key={"signup-card-3"}
+              id={"signup-card-3"}
               imageSrc={CalendarImage}
               imageAlt={"Login with Spotify"}
               isActive={signupStep === 3}

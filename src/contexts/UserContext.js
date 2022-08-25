@@ -12,6 +12,7 @@ export const UserContextProvider = ({ children }) => {
   const [userError, setUserError] = useState(null);
   const [user, setUser] = useState(null);
   const [isFetchingUser, setIsFetchingUser] = useState(false);
+  const [userStats, setUserStats] = useState(null);
 
   const checkUserToken = () => {
     console.debug("retrieving access token");
@@ -36,7 +37,7 @@ export const UserContextProvider = ({ children }) => {
     const res = await axios.post("/api/user/delete", null, {
       headers: { "X-Supabase-Auth": session?.access_token },
     });
-    if (res.statusCode === 204) {
+    if (res.status === 204) {
       setIsDeletingUser(false);
       supabase.auth.logout();
       setUser(null);
@@ -60,7 +61,7 @@ export const UserContextProvider = ({ children }) => {
     const res = await axios.post("/api/user/pause", null, {
       headers: { "X-Supabase-Auth": session?.access_token },
     });
-    if (res.statusCode === 200) {
+    if (res.status === 200) {
       setIsUserPaused(true);
     } else {
       console.error("Error pausing user");
@@ -78,7 +79,7 @@ export const UserContextProvider = ({ children }) => {
     const res = await axios.post("/api/user/unpause", null, {
       headers: { "X-Supabase-Auth": session?.access_token },
     });
-    if (res.statusCode === 200) {
+    if (res.status === 200) {
       setIsUserPaused(false);
     } else {
       console.error("Error unpausing user");
@@ -120,6 +121,21 @@ export const UserContextProvider = ({ children }) => {
     return user;
   };
 
+  // get user statistics
+  const getUserStatistics = async (token) => {
+    if (!token && !checkUserToken()) return;
+    console.debug("fetching user statistics");
+  
+    const res = await axios.get("/api/user/stats", {
+      headers: { "X-Supabase-Auth": session?.access_token || token },
+    });
+    if (res.status === 200) {
+      setUserStats(res.data?.statistics);
+    } else {
+      console.error("Error fetching user statistics");
+    }
+  };
+
   // initiate session and user
   useEffect(() => {
     const session = supabase.auth.session();
@@ -143,6 +159,7 @@ export const UserContextProvider = ({ children }) => {
       setSession(session);
       setUser(session.user);
       console.debug("sign in event detected");
+      getUserStatistics(session.access_token);
     }
   });
 
@@ -153,8 +170,10 @@ export const UserContextProvider = ({ children }) => {
         pauseUser,
         unpauseUser,
         togglePausingUser,
+        getUserStatistics,
         reloadUser: getUserFromDatabase,
         userError,
+        userStats,
         isDeletingUser,
         isPausingUser,
         isUserPaused,

@@ -195,7 +195,7 @@ async function main() {
     const databaseUser = res.locals.user;
     try {
       const count = await countSongs(databaseUser.id);
-      res.status(204).send({ statistics: { count } });
+      res.send({ statistics: { count } });
     } catch (error) {
       res.status(500).send(error);
     }

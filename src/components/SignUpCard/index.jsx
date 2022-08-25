@@ -10,7 +10,7 @@ const itemAnimation = {
 };
 
 const SignUpCard = ({
-  key,
+  id,
   imageSrc,
   imageAlt,
   children,
@@ -20,7 +20,7 @@ const SignUpCard = ({
 
   return (
     <AnimatedFlex
-      key={key}
+      key={id}
       bg="white"
       w="300px"
       boxShadow={isActive ? "2xl" : undefined}
