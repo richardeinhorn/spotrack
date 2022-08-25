@@ -162,7 +162,9 @@ export const UserContextProvider = ({ children }) => {
       setSession(session);
       setUser(session.user);
       console.debug("sign in event detected");
-      await getUserStatistics(session.access_token);
+
+      // if returning and fully set up user: pre-fetch statistics
+      // session.user.user_metadata.calendarId && await getUserStatistics(session.access_token);
     }
   });
 

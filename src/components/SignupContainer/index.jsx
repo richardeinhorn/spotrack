@@ -14,26 +14,7 @@ const containerAnimation = {
   },
 };
 
-const USE_ANIMATION = true;
-
-const SignupContainer = ({ children, id }) => {
-  return (
-      <HStack
-        spacing="32px"
-        id="signupContainer"
-        alignItems="stretch"
-        marginBottom="20px"
-        variants={containerAnimation}
-        initial="hidden"
-        animate="show"
-        key={id}
-      >
-        {children}
-      </HStack>
-  );
-};
-
-const AnimatedSignupContainer = ({ children, id }) => {
+const SignupContainer = ({ children, id, ...containerProps }) => {
   const AnimatedHStack = motion(HStack);
 
   return (
@@ -47,6 +28,7 @@ const AnimatedSignupContainer = ({ children, id }) => {
         initial="hidden"
         animate="show"
         key={id}
+        {...containerProps}
       >
         {children}
       </AnimatedHStack>
@@ -54,4 +36,4 @@ const AnimatedSignupContainer = ({ children, id }) => {
   );
 };
 
-export default USE_ANIMATION ? AnimatedSignupContainer: SignupContainer;
+export default SignupContainer;

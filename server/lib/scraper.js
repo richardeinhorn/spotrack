@@ -82,21 +82,48 @@ async function addNewSongEvent(calendarId, userUid, data, songData) {
 }
 
 async function processData(calendarId, userUid, data) {
-  // do not process if not playing
-  if (!data.body || !data.body.is_playing) return;
-  // TODO: finish last song early if needed
-  
-  // TODO: what happens if you quickly skip the song
+  if (!data.body) return;
 
   // get last song from DB
   const lastSong = await getLastSong(userUid);
   const songData = data.body;
+
+  // if playing is paused
+  if (!data.body.is_playing) {
+    // if paused before end of last song, update end time to now
+    if (new Date().getTime() < lastSong.endTime - 3000) {
+      await updateLastEvent(calendarId, lastSong.eventId, {
+        end: {
+          dateTime: `${new Date().toISOString().substring(0, 19)}+00:00`,
+          timeZone: "Europe/London",
+        },
+      });
+    }
+  }
+
+  // TODO: delete last song if played for less than 10 seconds
+
+  // if playing a track (and not a podcast)
   if (songData.currently_playing_type === "track") {
+    // if playing the same song as on last check
     if (lastSong && lastSong.uri === songData.item.uri) {
-      // TODO: update endTime
-      // console.log(`🎵 song for user ${userUid} already saved: ${songData.item.name}`);
+      // if the song is played longer than expected, update end time to new expected end time
+      if (songData.endTime > lastSong.endTime + 3000) {
+        await updateLastEvent(calendarId, lastSong.eventId, {
+          end: {
+            dateTime: `${new Date(
+              songData.timestamp -
+                songData.progress_ms +
+                songData.item.duration_ms
+            )
+              .toISOString()
+              .substring(0, 19)}+00:00`,
+            timeZone: "Europe/London",
+          },
+        });
+      }
     } else {
-      // if skipped last song (with 3s threshhold)
+      // if skipped last song (with 3s threshhold), update endtime to estimated past end time
       if (lastSong && lastSong.endTime > new Date().getTime() - 3000) {
         await updateLastEvent(calendarId, lastSong.eventId, {
           end: {

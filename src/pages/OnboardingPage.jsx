@@ -6,7 +6,7 @@ import {
   SignupContainer,
   AboutSection,
   CalendarEmailForm,
-  AnimatedBox,
+  SignupWrapper,
   CardButton,
   CardTitle,
   ProfileCard,
@@ -48,10 +48,10 @@ const OnboardingPage = () => {
 
     console.debug("Setting step and email.");
 
-    if (user?.user_metadata?.calendarId) setSignupStep(4);
-    else if (user?.user_metadata?.refresh_token) setSignupStep(3);
-    else if (user?.id) setSignupStep(2);
-    else setSignupStep(1);
+    if (user?.user_metadata?.calendarId && signupStep !== 4) setSignupStep(4);
+    else if (user?.user_metadata?.refresh_token  && signupStep !== 3) setSignupStep(3);
+    else if (user?.id  && signupStep !== 2) setSignupStep(2);
+    else if (signupStep !== 1) setSignupStep(1);
   }, [user]);
 
   return (
@@ -60,7 +60,7 @@ const OnboardingPage = () => {
       <Text fontSize="xl" marginBottom={30} textAlign="center">
         Track songs you listen to on Spotify. Easy setup, free to use.
       </Text>
-      <AnimatedBox>
+      <SignupWrapper>
         {signupStep === 4 ? (
           <ProfileCard id={"profile-card"} />
         ) : (
@@ -161,7 +161,7 @@ const OnboardingPage = () => {
             )}
           </SignupContainer>
         )}
-      </AnimatedBox>
+      </SignupWrapper>
       <AboutSection />
     </chakra.main>
   );

@@ -40,7 +40,7 @@ const ProfileCard = ({ id }) => {
         {isUserPaused ? "Spotrack is paused  " : "Spotrack is running  "}
         {isUserPaused ? <WarningTwoIcon /> : <Spinner />}
       </Text>
-      {userStats?.count && (
+      {typeof userStats?.count !== "undefined" && (
         <Center margin="20px auto 25px auto" align="center">
           <Stat>
             <StatLabel>Songs recorded</StatLabel>

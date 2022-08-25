@@ -29,7 +29,7 @@ const CalendarSetup = ({ initialValue }) => {
           <Text align="left" marginTop="6px" lineHeight="2.2em">
             Go to{" "}
             <a
-              style={{ color: "inherit" }}
+              style={{ color: "inherit", textDecoration: "underline" }}
               href="https://calendar.google.com/calendar/r/settings/addcalendar?pli=1"
               target="_blank"
               rel="noreferrer"
