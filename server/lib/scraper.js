@@ -91,7 +91,11 @@ async function processData(calendarId, userUid, data) {
 
   // TODO: if first song recorded on Spotrack (check type)
   // if (!lastSong) return await addNewSongEvent(calendarId, userUid, data, songData);
-  if (!lastSong && songData.currently_playing_type === "track") return await addNewSongEvent(calendarId, userUid, data, songData);
+  if (!lastSong) {
+    if (songData.currently_playing_type === "track")
+      return await addNewSongEvent(calendarId, userUid, data, songData);
+    else return;
+  }
 
   // if playing is paused
   if (!data.body.is_playing) {
