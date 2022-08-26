@@ -26,7 +26,7 @@ const OnboardingPage = () => {
   const [signupStep, setSignupStep] = useState(1);
   const [email, setEmail] = useState("");
 
-  const { user } = useUserContext();
+  const { user, isFirstLoading } = useUserContext();
   const {
     signInWithSpotify,
     isLoggingInOnSpotify,
@@ -46,12 +46,21 @@ const OnboardingPage = () => {
     // set Spotify email as default email for new calendar
     if (!email) setEmail(user?.email);
 
-    console.debug("Setting step and email.");
-
-    if (user?.user_metadata?.calendarId && signupStep !== 4) setSignupStep(4);
-    else if (user?.user_metadata?.refresh_token  && signupStep !== 3) setSignupStep(3);
-    else if (user?.id  && signupStep !== 2) setSignupStep(2);
-    else if (signupStep !== 1) setSignupStep(1);
+    
+    const getSignupStep = () => {
+      if (user?.user_metadata?.calendarId) return 4;
+      if (user?.user_metadata?.refresh_token) return 3;
+      if (user?.id) return 2;
+      return 1;
+    }
+    
+    const newStep = getSignupStep()
+    
+    if (signupStep === newStep) return console.debug("Signup step unchanged.");
+    else {
+      console.debug(`Setting signup step: ${signupStep} -> ${newStep}`);
+      setSignupStep(newStep)
+    };
   }, [user]);
 
   return (
@@ -60,7 +69,7 @@ const OnboardingPage = () => {
       <Text fontSize="xl" marginBottom={30} textAlign="center">
         Track songs you listen to on Spotify. Easy setup, free to use.
       </Text>
-      <SignupWrapper>
+      <SignupWrapper isLoading={isFirstLoading}>
         {signupStep === 4 ? (
           <ProfileCard id={"profile-card"} />
         ) : (

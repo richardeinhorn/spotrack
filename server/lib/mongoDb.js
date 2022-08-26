@@ -5,9 +5,9 @@ export async function saveSongToDb(dbEntry) {
 
   try {
     await song.save();
-    console.log("✅ Song added to database");
+    // console.log("✅ Song added to database");
   } catch (error) {
-    console.error(`❌ Error saving song to database: ${error}`);
+    console.error(`❌ Error saving song to database for user ${dbEntry.userUid}. ${error}`);
   }
 }
 

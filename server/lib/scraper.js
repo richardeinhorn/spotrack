@@ -81,6 +81,7 @@ async function addNewSongEvent(calendarId, userUid, data, songData) {
   await saveSongToDb(dbEntry);
 }
 
+// TODO: delete last song if played for less than 10 seconds
 async function processData(calendarId, userUid, data) {
   if (!data.body) return;
 
@@ -88,10 +89,13 @@ async function processData(calendarId, userUid, data) {
   const lastSong = await getLastSong(userUid);
   const songData = data.body;
 
+  // TODO: if first song recorded on Spotrack (check type)
+  // if (!lastSong) return await addNewSongEvent(calendarId, userUid, data, songData);
+
   // if playing is paused
   if (!data.body.is_playing) {
     // if paused before end of last song, update end time to now
-    if (lastSong && new Date().getTime() < lastSong.endTime - 3000) {
+    if (new Date().getTime() < lastSong.endTime - 3000) {
       await updateLastEvent(calendarId, lastSong.eventId, {
         end: {
           dateTime: `${new Date().toISOString().substring(0, 19)}+00:00`,
@@ -100,13 +104,10 @@ async function processData(calendarId, userUid, data) {
       });
     }
   }
-
-  // TODO: delete last song if played for less than 10 seconds
-
   // if playing a track (and not a podcast)
-  if (songData.currently_playing_type === "track") {
+  else if (songData.currently_playing_type === "track") {
     // if playing the same song as on last check
-    if (lastSong && lastSong.uri === songData.item.uri) {
+    if (lastSong.uri === songData.item.uri) {
       // if the song is played longer than expected, update end time to new expected end time
       if (songData.endTime > lastSong.endTime + 3000) {
         await updateLastEvent(calendarId, lastSong.eventId, {
@@ -124,7 +125,7 @@ async function processData(calendarId, userUid, data) {
       }
     } else {
       // if skipped last song (with 3s threshhold), update endtime to estimated past end time
-      if (lastSong && lastSong.endTime > new Date().getTime() - 3000) {
+      if (lastSong.endTime > new Date().getTime() - 3000) {
         await updateLastEvent(calendarId, lastSong.eventId, {
           end: {
             dateTime: `${new Date(songData.timestamp - songData.progress_ms)
@@ -138,7 +139,7 @@ async function processData(calendarId, userUid, data) {
     }
   } else if (songData.currently_playing_type === "episode") {
     // if continue to listen
-    if (lastSong && lastSong.type === "episode") {
+    if (lastSong.type === "episode") {
       const lastEvent = await getEvent(calendarId, lastSong.eventId);
 
       // if last podcast ping is more than 30s ago
@@ -158,7 +159,7 @@ async function processData(calendarId, userUid, data) {
         });
       }
       // else if startened to listen to podcast
-    } else if (lastSong && lastSong.type !== "episode") {
+    } else if (lastSong.type !== "episode") {
       // if skipped last song to a podcast episode (with 3s threshhold)
       if (lastSong.endTime > new Date().getTime() - 3000) {
         await updateLastEvent(calendarId, lastSong.eventId, {

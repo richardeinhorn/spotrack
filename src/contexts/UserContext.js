@@ -5,6 +5,7 @@ import { supabase } from "../lib/supabase";
 const UserContext = createContext(undefined);
 
 export const UserContextProvider = ({ children }) => {
+  const [isFirstLoading, setIsFirstLoading] = useState(true)
   const [isDeletingUser, setIsDeletingUser] = useState(false);
   const [isPausingUser, setIsPausingUser] = useState(false);
   const [isUserPaused, setIsUserPaused] = useState(null);
@@ -119,7 +120,7 @@ export const UserContextProvider = ({ children }) => {
     setIsFetchingUser(true);
     console.debug("fetching user record from database.");
 
-    const { user, error } = await supabase.auth.api.getUser(
+    const { user: serverUser, error } = await supabase.auth.api.getUser(
       token || session?.access_token
     );
     if (error) {
@@ -129,14 +130,19 @@ export const UserContextProvider = ({ children }) => {
       if (error.status === 404) signoutUser();
       return;
     }
-    setUser(user);
-    setIsUserPaused(user.user_metadata?.isPaused);
+
+    // if server record different from local one update local one
+    if  (JSON.stringify(user) !== JSON.stringify(serverUser)) {
+      setUser(serverUser);
+      setIsUserPaused(serverUser.user_metadata?.isPaused);
+    }
 
     // also update user statistics
     await getUserStatistics(token);
 
     setIsFetchingUser(false);
-    return user;
+    setIsFirstLoading(false);
+    return serverUser;
   };
 
   // initiate session and user
@@ -153,6 +159,7 @@ export const UserContextProvider = ({ children }) => {
 
     // refresh local data with database record
     if (session?.access_token) getUserFromDatabase(session.access_token);
+    else setIsFirstLoading(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -171,6 +178,7 @@ export const UserContextProvider = ({ children }) => {
   return (
     <UserContext.Provider
       value={{
+        isFirstLoading,
         deleteUserProfile,
         pauseUser,
         unpauseUser,

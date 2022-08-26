@@ -1,7 +1,7 @@
 import React from "react";
-import { Box } from "@chakra-ui/react";
+import { Box, Spinner } from "@chakra-ui/react";
 
-const SignupWrapper = ({ children }) => {
+const SignupWrapper = ({ children, isLoading }) => {
   return (
     <>
       <svg
@@ -25,7 +25,7 @@ const SignupWrapper = ({ children }) => {
         paddingBottom="40px"
         key="animted-box"
       >
-        {children}
+        {isLoading ? <Spinner /> : children}
       </Box>
     </>
   );

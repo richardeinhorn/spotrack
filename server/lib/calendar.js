@@ -65,11 +65,11 @@ export async function shareCalendarWithUser(calendarId, calendarEmail) {
       },
     })
     .then((res) => {
-      console.log("✅ Calendar shared with user");
+      console.log(`✅ Calendar ${calendarId} shared with user`);
       if (res.data) return res.data;
     })
     .catch((error) => {
-      console.error(`❌ Error sharing calendar with user: ${error}`);
+      console.error(`❌ Error sharing calendar ${calendarId} with user: ${error}`);
       throw new Error(error);
     });
 }
@@ -89,9 +89,9 @@ export async function createNewCalendar(userUid, calendarEmail) {
       console.log("✅ New calendar added");
       if (res.data) return res.data;
     })
-    .catch((error) => console.error(`❌ Error creating calendar: ${error}`));
+    .catch((error) => console.error(`❌ Error creating calendar for user ${userUid}. ${error}`));
   const calendarId = newCalendar.id;
-  if (!calendarId) throw new Error("❌ Error creating new calendar");
+  if (!calendarId) throw new Error("Error creating new calendar");
 
   // share the calendar with the user
   await shareCalendarWithUser(calendarId, calendarEmail);
@@ -113,11 +113,11 @@ export async function addEvent(calendarId, newEvent) {
       resource: newEvent,
     })
     .then((res) => {
-      console.log("✅ Song added to calendar");
+      // console.log("✅ Song added to calendar");
       if (res.data) return res.data.id;
     })
     .catch((error) =>
-      console.error(`❌ Error adding song to calendar: ${error}`)
+      console.error(`❌ Error adding song to calendar ${calendarId}. ${error}`)
     );
   return id;
 }
