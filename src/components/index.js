@@ -3,7 +3,7 @@ import Logo from "./Logo";
 import AboutSection from "./AboutSection";
 import CalendarEmailForm from "./CalendarEmailForm";
 import ProfileCard from "./Profile";
-import AnimatedBox from "./SignupWrapper";
+import SignupWrapper from "./SignupWrapper";
 import SignUpCard from "./SignUpCard";
 export * from "./SignUpCard/components";
 
@@ -13,6 +13,6 @@ export {
   AboutSection,
   CalendarEmailForm,
   ProfileCard,
-  AnimatedBox,
+  SignupWrapper,
   SignUpCard,
 };

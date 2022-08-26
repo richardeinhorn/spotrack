@@ -39,7 +39,7 @@ export const UserContextProvider = ({ children }) => {
     });
     if (res.status === 204) {
       setIsDeletingUser(false);
-      supabase.auth.logout();
+      supabase.auth.signOut();
       setUser(null);
       setSession(null);
 

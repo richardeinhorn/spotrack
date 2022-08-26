@@ -91,7 +91,7 @@ async function processData(calendarId, userUid, data) {
   // if playing is paused
   if (!data.body.is_playing) {
     // if paused before end of last song, update end time to now
-    if (new Date().getTime() < lastSong.endTime - 3000) {
+    if (lastSong && new Date().getTime() < lastSong.endTime - 3000) {
       await updateLastEvent(calendarId, lastSong.eventId, {
         end: {
           dateTime: `${new Date().toISOString().substring(0, 19)}+00:00`,
