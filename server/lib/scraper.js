@@ -91,6 +91,7 @@ async function processData(calendarId, userUid, data) {
 
   // TODO: if first song recorded on Spotrack (check type)
   // if (!lastSong) return await addNewSongEvent(calendarId, userUid, data, songData);
+  if (!lastSong && songData.currently_playing_type === "track") return await addNewSongEvent(calendarId, userUid, data, songData);
 
   // if playing is paused
   if (!data.body.is_playing) {
@@ -194,14 +195,20 @@ export async function runCron(spotifyApi) {
         console.info(`User ${user.id} is not onboarded.`);
       continue;
     }
-    // TODO: allow parallel processing
-    await getCurrentTrackFromUser(
-      spotifyApi,
-      user.user_metadata.calendarId,
-      user.id,
-      user.user_metadata.refresh_token,
-      user.user_metadata.access_token,
-      processData
-    );
+
+    try {
+      // TODO: allow parallel processing
+      await getCurrentTrackFromUser(
+        spotifyApi,
+        user.user_metadata.calendarId,
+        user.id,
+        user.user_metadata.refresh_token,
+        user.user_metadata.access_token,
+        processData
+      );
+    } catch (error) {
+      console.error(`Error processing user ${user.id}`);
+      console.error(error);
+    }
   }
 }
